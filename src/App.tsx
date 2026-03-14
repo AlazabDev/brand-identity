@@ -12,6 +12,8 @@ import QuotePage from "./pages/QuotePage.tsx";
 import FAQPage from "./pages/FAQPage.tsx";
 import PrivacyPage from "./pages/PrivacyPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import AdminLoginPage from "./pages/AdminLoginPage.tsx";
+import AdminDashboard from "./pages/AdminDashboard.tsx";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 

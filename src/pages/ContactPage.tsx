@@ -3,18 +3,46 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingButtons from "@/components/FloatingButtons";
 import { motion } from "framer-motion";
-import { Phone, Mail, MapPin, Clock, Send } from "lucide-react";
+import { Phone, Mail, MapPin, Clock, Send, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const ContactPage = () => {
   const [form, setForm] = useState({
     name: "", email: "", phone: "", activity: "", mall: "", area: "", message: "",
   });
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const sendWhatsAppNotification = (data: typeof form) => {
+    const text = `📩 رسالة جديدة من الموقع\n\n👤 الاسم: ${data.name}\n📧 البريد: ${data.email || "—"}\n📱 الجوال: ${data.phone || "—"}\n🏪 النشاط: ${data.activity || "—"}\n🏬 المول: ${data.mall || "—"}\n📐 المساحة: ${data.area || "—"}\n💬 الرسالة: ${data.message || "—"}`;
+    window.open(`https://wa.me/201004006620?text=${encodeURIComponent(text)}`, "_blank");
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("تم إرسال رسالتك بنجاح! سنتواصل معك قريباً");
-    setForm({ name: "", email: "", phone: "", activity: "", mall: "", area: "", message: "" });
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from("contact_messages").insert({
+        name: form.name,
+        email: form.email || null,
+        phone: form.phone || null,
+        business_type: form.activity || null,
+        mall: form.mall || null,
+        area: form.area || null,
+        message: form.message || null,
+      });
+
+      if (error) throw error;
+
+      toast.success("تم إرسال رسالتك بنجاح! سنتواصل معك قريباً");
+      sendWhatsAppNotification(form);
+      setForm({ name: "", email: "", phone: "", activity: "", mall: "", area: "", message: "" });
+    } catch (err) {
+      console.error("Error submitting contact:", err);
+      toast.error("حدث خطأ أثناء الإرسال. حاول مرة أخرى");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -73,7 +101,7 @@ const ContactPage = () => {
                 <h2 className="font-display font-bold text-2xl text-foreground mb-2">أرسل لنا رسالة</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <input type="text" placeholder="الاسم الكامل" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" />
-                  <input type="email" placeholder="البريد الإلكتروني" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" />
+                  <input type="email" placeholder="البريد الإلكتروني" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" />
                   <input type="tel" placeholder="رقم الجوال" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" />
                   <select value={form.activity} onChange={(e) => setForm({ ...form, activity: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50">
                     <option value="">نوع النشاط</option>
@@ -87,8 +115,8 @@ const ContactPage = () => {
                   <input type="text" placeholder="المساحة (م²)" value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" />
                 </div>
                 <textarea placeholder="رسالتك..." rows={4} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 resize-none" />
-                <button type="submit" className="inline-flex items-center gap-2 px-8 py-3 rounded-lg bg-accent text-accent-foreground font-display font-bold hover:-translate-y-0.5 active:scale-95 transition-all">
-                  <Send className="w-4 h-4" /> إرسال الرسالة
+                <button type="submit" disabled={submitting} className="inline-flex items-center gap-2 px-8 py-3 rounded-lg bg-accent text-accent-foreground font-display font-bold hover:-translate-y-0.5 active:scale-95 transition-all disabled:opacity-50">
+                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />} إرسال الرسالة
                 </button>
               </motion.form>
 

@@ -3,8 +3,9 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingButtons from "@/components/FloatingButtons";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, CheckCircle, Upload } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle, Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const steps = ["المعلومات الأساسية", "تفاصيل المشروع", "الخدمات المطلوبة", "الميزانية والجدول", "رفع الملفات", "المراجعة والإرسال"];
 
@@ -20,6 +21,7 @@ const servicesList = [
 
 const QuotePage = () => {
   const [step, setStep] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
   const [data, setData] = useState({
     clientName: "", shopName: "", activity: "",
     mall: "", shopNumber: "", area: "", shopStatus: "",
@@ -35,9 +37,44 @@ const QuotePage = () => {
     }));
   };
 
-  const handleSubmit = () => {
-    toast.success("تم إرسال طلب عرض السعر بنجاح! سنتواصل معك خلال 24 ساعة");
-    setStep(0);
+  const sendWhatsAppNotification = () => {
+    const text = `📋 طلب عرض سعر جديد\n\n👤 العميل: ${data.clientName}\n🏪 المحل: ${data.shopName || "—"}\n📂 النشاط: ${data.activity || "—"}\n🏬 المول: ${data.mall || "—"}\n🔢 رقم المحل: ${data.shopNumber || "—"}\n📐 المساحة: ${data.area || "—"}\n🔧 الحالة: ${data.shopStatus || "—"}\n🛠 الخدمات: ${data.services.join("، ") || "—"}\n💰 الميزانية: ${data.budget || "—"}\n📅 الافتتاح: ${data.openingDate || "—"}\n📝 ملاحظات: ${data.notes || "—"}`;
+    window.open(`https://wa.me/201004006620?text=${encodeURIComponent(text)}`, "_blank");
+  };
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from("quote_requests").insert({
+        client_name: data.clientName,
+        shop_name: data.shopName || null,
+        business_type: data.activity || null,
+        mall: data.mall || null,
+        shop_number: data.shopNumber || null,
+        area: data.area || null,
+        shop_status: data.shopStatus || null,
+        services: data.services.length > 0 ? data.services : null,
+        budget: data.budget || null,
+        opening_date: data.openingDate || null,
+        notes: data.notes || null,
+      });
+
+      if (error) throw error;
+
+      toast.success("تم إرسال طلب عرض السعر بنجاح! سنتواصل معك خلال 24 ساعة");
+      sendWhatsAppNotification();
+      setStep(0);
+      setData({
+        clientName: "", shopName: "", activity: "",
+        mall: "", shopNumber: "", area: "", shopStatus: "",
+        services: [], budget: "", openingDate: "", notes: "",
+      });
+    } catch (err) {
+      console.error("Error submitting quote:", err);
+      toast.error("حدث خطأ أثناء الإرسال. حاول مرة أخرى");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const canNext = () => {
@@ -169,9 +206,10 @@ const QuotePage = () => {
                 ) : (
                   <button
                     onClick={handleSubmit}
-                    className="inline-flex items-center gap-2 px-8 py-3 rounded-lg bg-accent text-accent-foreground font-display font-bold text-sm hover:-translate-y-0.5 active:scale-95 transition-all"
+                    disabled={submitting}
+                    className="inline-flex items-center gap-2 px-8 py-3 rounded-lg bg-accent text-accent-foreground font-display font-bold text-sm hover:-translate-y-0.5 active:scale-95 transition-all disabled:opacity-50"
                   >
-                    إرسال الطلب <CheckCircle className="w-4 h-4" />
+                    {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />} إرسال الطلب
                   </button>
                 )}
               </div>

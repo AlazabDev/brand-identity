@@ -1,6 +1,8 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingButtons from "@/components/FloatingButtons";
+import PageMeta from "@/components/PageMeta";
+import PageTransition from "@/components/PageTransition";
 import { motion } from "framer-motion";
 import { Hammer, GlassWater, Archive, Palette, KeyRound, CheckCircle } from "lucide-react";
 
@@ -39,60 +41,67 @@ const services = [
 
 const ServicesPage = () => {
   return (
-    <div className="min-h-screen">
-      <Header />
-      <main className="pt-20">
-        <section className="section-padding bg-primary text-primary-foreground">
-          <div className="container-custom text-center">
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="font-display font-bold text-4xl md:text-5xl mb-4"
-            >
-              خدماتنا المتكاملة
-            </motion.h1>
-            <p className="text-primary-foreground/70 font-body text-lg max-w-2xl mx-auto">
-              من الألف إلى الياء - نقدم لك حلول تجهيز شاملة لمحلك التجاري
-            </p>
-          </div>
-        </section>
-
-        <section className="section-padding bg-background">
-          <div className="container-custom space-y-12">
-            {services.map((service, i) => (
-              <motion.div
-                key={service.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ delay: i * 0.1 }}
-                className="card-elevated p-8 md:p-10"
+    <PageTransition>
+      <PageMeta
+        title="خدماتنا المتكاملة"
+        description="خدمات تجهيز المحلات التجارية الشاملة من Brand Identity - تأسيس، تصنيع وحدات عرض، ديكور، واجهات، وتسليم على المفتاح."
+        canonical="https://brand-identity.alazab.com/services"
+      />
+      <div className="min-h-screen">
+        <Header />
+        <main id="main-content" className="pt-20">
+          <section className="section-padding bg-primary text-primary-foreground">
+            <div className="container-custom text-center">
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="font-display font-bold text-4xl md:text-5xl mb-4"
               >
-                <div className="flex flex-col md:flex-row gap-8">
-                  <div className="w-20 h-20 rounded-2xl bg-primary/5 flex items-center justify-center shrink-0">
-                    <service.icon className="w-10 h-10 text-accent" strokeWidth={1.5} />
-                  </div>
-                  <div className="flex-1">
-                    <h2 className="font-display font-bold text-2xl text-foreground mb-3">{service.title}</h2>
-                    <p className="text-muted-foreground font-body mb-6">{service.desc}</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {service.details.map((detail) => (
-                        <div key={detail} className="flex items-center gap-2">
-                          <CheckCircle className="w-4 h-4 text-accent shrink-0" />
-                          <span className="text-foreground text-sm font-body">{detail}</span>
-                        </div>
-                      ))}
+                خدماتنا المتكاملة
+              </motion.h1>
+              <p className="text-primary-foreground/70 font-body text-lg max-w-2xl mx-auto">
+                من الألف إلى الياء - نقدم لك حلول تجهيز شاملة لمحلك التجاري
+              </p>
+            </div>
+          </section>
+
+          <section className="section-padding bg-background">
+            <div className="container-custom space-y-12">
+              {services.map((service, i) => (
+                <motion.div
+                  key={service.title}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-100px" }}
+                  transition={{ delay: i * 0.1 }}
+                  className="card-elevated p-8 md:p-10"
+                >
+                  <div className="flex flex-col md:flex-row gap-8">
+                    <div className="w-20 h-20 rounded-2xl bg-primary/5 flex items-center justify-center shrink-0">
+                      <service.icon className="w-10 h-10 text-accent" strokeWidth={1.5} />
+                    </div>
+                    <div className="flex-1">
+                      <h2 className="font-display font-bold text-2xl text-foreground mb-3">{service.title}</h2>
+                      <p className="text-muted-foreground font-body mb-6">{service.desc}</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {service.details.map((detail) => (
+                          <div key={detail} className="flex items-center gap-2">
+                            <CheckCircle className="w-4 h-4 text-accent shrink-0" />
+                            <span className="text-foreground text-sm font-body">{detail}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </section>
-      </main>
-      <Footer />
-      <FloatingButtons />
-    </div>
+                </motion.div>
+              ))}
+            </div>
+          </section>
+        </main>
+        <Footer />
+        <FloatingButtons />
+      </div>
+    </PageTransition>
   );
 };
 

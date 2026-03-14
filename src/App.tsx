@@ -1,21 +1,25 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
-import AboutPage from "./pages/AboutPage.tsx";
-import ServicesPage from "./pages/ServicesPage.tsx";
-import ProjectsPage from "./pages/ProjectsPage.tsx";
-import BlogPage from "./pages/BlogPage.tsx";
-import ContactPage from "./pages/ContactPage.tsx";
-import QuotePage from "./pages/QuotePage.tsx";
-import FAQPage from "./pages/FAQPage.tsx";
-import PrivacyPage from "./pages/PrivacyPage.tsx";
-import NotFound from "./pages/NotFound.tsx";
-import AdminLoginPage from "./pages/AdminLoginPage.tsx";
-import AdminDashboard from "./pages/AdminDashboard.tsx";
-import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
+import { lazy, Suspense, useEffect } from "react";
+import SkipToContent from "@/components/SkipToContent";
+import LoadingScreen from "@/components/LoadingScreen";
+
+// Lazy load pages for better performance
+const Index = lazy(() => import("./pages/Index"));
+const AboutPage = lazy(() => import("./pages/AboutPage"));
+const ServicesPage = lazy(() => import("./pages/ServicesPage"));
+const ProjectsPage = lazy(() => import("./pages/ProjectsPage"));
+const BlogPage = lazy(() => import("./pages/BlogPage"));
+const ContactPage = lazy(() => import("./pages/ContactPage"));
+const QuotePage = lazy(() => import("./pages/QuotePage"));
+const FAQPage = lazy(() => import("./pages/FAQPage"));
+const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const AdminLoginPage = lazy(() => import("./pages/AdminLoginPage"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 
 const queryClient = new QueryClient();
 
@@ -25,26 +29,38 @@ function ScrollToTop() {
   return null;
 }
 
+function AnimatedRoutes() {
+  const location = useLocation();
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<Index />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/services" element={<ServicesPage />} />
+        <Route path="/projects" element={<ProjectsPage />} />
+        <Route path="/blog" element={<BlogPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/quote" element={<QuotePage />} />
+        <Route path="/faq" element={<FAQPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </AnimatePresence>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Sonner />
       <BrowserRouter>
+        <SkipToContent />
         <ScrollToTop />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/services" element={<ServicesPage />} />
-          <Route path="/projects" element={<ProjectsPage />} />
-          <Route path="/blog" element={<BlogPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/quote" element={<QuotePage />} />
-          <Route path="/faq" element={<FAQPage />} />
-          <Route path="/privacy" element={<PrivacyPage />} />
-          <Route path="/admin/login" element={<AdminLoginPage />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <Suspense fallback={<LoadingScreen />}>
+          <AnimatedRoutes />
+        </Suspense>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

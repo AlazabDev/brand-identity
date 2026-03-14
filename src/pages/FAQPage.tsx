@@ -1,6 +1,8 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingButtons from "@/components/FloatingButtons";
+import PageMeta from "@/components/PageMeta";
+import PageTransition from "@/components/PageTransition";
 import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
@@ -39,10 +41,10 @@ const categories = [
 function AccordionItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border-b border-border">
-      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between py-4 text-right">
+    <div className="border-b border-border last:border-b-0">
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between py-4 text-right" aria-expanded={open}>
         <span className="font-display font-bold text-foreground text-sm">{q}</span>
-        <ChevronDown className={`w-5 h-5 text-accent shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown className={`w-5 h-5 text-accent shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
         <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} className="pb-4">
@@ -55,35 +57,42 @@ function AccordionItem({ q, a }: { q: string; a: string }) {
 
 const FAQPage = () => {
   return (
-    <div className="min-h-screen">
-      <Header />
-      <main className="pt-20">
-        <section className="section-padding bg-primary text-primary-foreground">
-          <div className="container-custom text-center">
-            <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="font-display font-bold text-4xl md:text-5xl mb-4">
-              الأسئلة الشائعة
-            </motion.h1>
-          </div>
-        </section>
+    <PageTransition>
+      <PageMeta
+        title="الأسئلة الشائعة"
+        description="إجابات على أكثر الأسئلة شيوعاً حول خدمات تجهيز المحلات التجارية من Brand Identity."
+        canonical="https://brand-identity.alazab.com/faq"
+      />
+      <div className="min-h-screen">
+        <Header />
+        <main id="main-content" className="pt-20">
+          <section className="section-padding bg-primary text-primary-foreground">
+            <div className="container-custom text-center">
+              <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="font-display font-bold text-4xl md:text-5xl mb-4">
+                الأسئلة الشائعة
+              </motion.h1>
+            </div>
+          </section>
 
-        <section className="section-padding bg-background">
-          <div className="container-custom max-w-3xl space-y-10">
-            {categories.map((cat) => (
-              <div key={cat.title}>
-                <h2 className="font-display font-bold text-xl text-foreground mb-4">{cat.title}</h2>
-                <div className="card-elevated p-6">
-                  {cat.questions.map((item) => (
-                    <AccordionItem key={item.q} {...item} />
-                  ))}
+          <section className="section-padding bg-background">
+            <div className="container-custom max-w-3xl space-y-10">
+              {categories.map((cat) => (
+                <div key={cat.title}>
+                  <h2 className="font-display font-bold text-xl text-foreground mb-4">{cat.title}</h2>
+                  <div className="card-elevated p-6">
+                    {cat.questions.map((item) => (
+                      <AccordionItem key={item.q} {...item} />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      </main>
-      <Footer />
-      <FloatingButtons />
-    </div>
+              ))}
+            </div>
+          </section>
+        </main>
+        <Footer />
+        <FloatingButtons />
+      </div>
+    </PageTransition>
   );
 };
 

@@ -10,25 +10,34 @@ import BlogPreview from "@/components/BlogPreview";
 import CTABand from "@/components/CTABand";
 import Footer from "@/components/Footer";
 import FloatingButtons from "@/components/FloatingButtons";
+import PageMeta from "@/components/PageMeta";
+import PageTransition from "@/components/PageTransition";
 
 const Index = () => {
   return (
-    <div className="min-h-screen">
-      <Header />
-      <main>
-        <HeroSection />
-        <ServicesSection />
-        <MallExpertise />
-        <AbuAufShowcase />
-        <ProjectsGallery />
-        <WorkSteps />
-        <Testimonials />
-        <BlogPreview />
-        <CTABand />
-      </main>
-      <Footer />
-      <FloatingButtons />
-    </div>
+    <PageTransition>
+      <PageMeta
+        title="تجهيز المحلات التجارية في المولات"
+        description="شركة Brand Identity متخصصة في تأسيس وتجهيز المحلات التجارية داخل المولات - تصميم، تصنيع، تنفيذ. أكثر من 200 مشروع منفذ و270 فرع أبو عوف."
+        canonical="https://brand-identity.alazab.com"
+      />
+      <div className="min-h-screen">
+        <Header />
+        <main id="main-content">
+          <HeroSection />
+          <ServicesSection />
+          <MallExpertise />
+          <AbuAufShowcase />
+          <ProjectsGallery />
+          <WorkSteps />
+          <Testimonials />
+          <BlogPreview />
+          <CTABand />
+        </main>
+        <Footer />
+        <FloatingButtons />
+      </div>
+    </PageTransition>
   );
 };
 

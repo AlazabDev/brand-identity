@@ -4,7 +4,7 @@ import brandLogo from "@/assets/brand-identity.png";
 
 const Footer = () => {
   return (
-    <footer className="bg-primary text-primary-foreground pt-16 pb-8">
+    <footer role="contentinfo" className="bg-primary text-primary-foreground pt-16 pb-8">
       <div className="container-custom px-4 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
           {/* About */}

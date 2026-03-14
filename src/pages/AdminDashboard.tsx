@@ -136,12 +136,12 @@ const AdminDashboard = () => {
   };
 
   // --- Messages ---
-  const markRead = async (table: string, id: string, read: boolean) => {
-    await supabase.from(table).update({ read: !read }).eq("id", id);
+  const markRead = async (table: "contact_messages" | "quote_requests", id: string, read: boolean) => {
+    await supabase.from(table).update({ read: !read } as any).eq("id", id);
     loadData();
   };
 
-  const deleteMessage = async (table: string, id: string) => {
+  const deleteMessage = async (table: "contact_messages" | "quote_requests", id: string) => {
     if (confirm("هل أنت متأكد من الحذف؟")) {
       await supabase.from(table).delete().eq("id", id);
       loadData();

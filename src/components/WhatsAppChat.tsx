@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Paperclip, Image, FileText, Loader2, MessageCircle } from "lucide-react";
+import { X, Send, Paperclip, Image, FileText, Loader2, MessageCircle, Mic, Square } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -9,12 +9,19 @@ interface ChatMessage {
   text: string;
   sender: "user" | "bot";
   timestamp: Date;
-  type: "text" | "image" | "document";
+  type: "text" | "image" | "document" | "audio";
   fileName?: string;
+  audioDuration?: number;
 }
 
 const BUSINESS_PHONE = "+201004006620";
 const BUSINESS_NAME = "العزب للمقاولات";
+
+const formatDuration = (seconds: number) => {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s.toString().padStart(2, "0")}`;
+};
 
 const WhatsAppChat = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,13 +37,28 @@ const WhatsAppChat = () => {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Cleanup recording on unmount
+  useEffect(() => {
+    return () => {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+        mediaRecorderRef.current.stop();
+      }
+      if (recordingIntervalRef.current) clearInterval(recordingIntervalRef.current);
+    };
+  }, []);
 
   const sendMessage = async () => {
     if (!input.trim() || sending) return;
@@ -60,7 +82,6 @@ const WhatsAppChat = () => {
 
       if (error) throw error;
 
-      // Show auto-reply since WhatsApp Business has AI
       const botMsg: ChatMessage = {
         id: crypto.randomUUID(),
         text: "تم إرسال رسالتك بنجاح ✅\nسيتم الرد عليك عبر واتساب الأعمال مباشرة.",
@@ -71,10 +92,9 @@ const WhatsAppChat = () => {
       setMessages((prev) => [...prev, botMsg]);
     } catch (err) {
       console.error("Send error:", err);
-      // Fallback to wa.me
       const waText = encodeURIComponent(text);
       window.open(`https://wa.me/201004006620?text=${waText}`, "_blank");
-      
+
       const fallbackMsg: ChatMessage = {
         id: crypto.randomUUID(),
         text: "تم فتح واتساب لإرسال رسالتك مباشرة 📱",
@@ -88,48 +108,59 @@ const WhatsAppChat = () => {
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: "document" | "image") => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setShowAttachMenu(false);
+  const uploadFile = async (file: File | Blob, fileName: string, mediaType: string) => {
     setSending(true);
+
+    const label =
+      mediaType === "image" ? "📷 صورة" :
+      mediaType === "audio" ? `🎤 رسالة صوتية` :
+      `📎 ${fileName}`;
 
     const userMsg: ChatMessage = {
       id: crypto.randomUUID(),
-      text: type === "image" ? "📷 صورة" : `📎 ${file.name}`,
+      text: label,
       sender: "user",
       timestamp: new Date(),
-      type,
-      fileName: file.name,
+      type: mediaType as ChatMessage["type"],
+      fileName,
+      audioDuration: mediaType === "audio" ? recordingTime : undefined,
     };
     setMessages((prev) => [...prev, userMsg]);
 
     try {
-      // Upload to storage first, then send via WhatsApp
-      const filePath = `whatsapp/${Date.now()}_${file.name}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("chat-files")
-        .upload(filePath, file);
+      const formData = new FormData();
+      formData.append("file", file, fileName);
+      formData.append("to", BUSINESS_PHONE);
+      formData.append("mediaType", mediaType);
+      formData.append("fileName", fileName);
 
-      if (uploadError) throw uploadError;
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-      const { data: urlData } = supabase.storage.from("chat-files").getPublicUrl(filePath);
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/whatsapp`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${anonKey}`,
+            apikey: anonKey,
+          },
+          body: formData,
+        }
+      );
 
-      const { error } = await supabase.functions.invoke("whatsapp", {
-        body: {
-          action: "send_media",
-          to: BUSINESS_PHONE,
-          mediaUrl: urlData.publicUrl,
-          mediaType: type,
-          fileName: file.name,
-        },
-      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `Upload failed [${res.status}]`);
+      }
 
-      if (error) throw error;
+      const data = await res.json();
 
       const botMsg: ChatMessage = {
         id: crypto.randomUUID(),
-        text: "تم إرسال الملف بنجاح ✅",
+        text: mediaType === "audio"
+          ? "تم إرسال الرسالة الصوتية بنجاح ✅"
+          : "تم إرسال الملف بنجاح ✅\nتم حفظ نسخة في التخزين السحابي.",
         sender: "bot",
         timestamp: new Date(),
         type: "text",
@@ -141,10 +172,80 @@ const WhatsAppChat = () => {
       window.open(`https://wa.me/201004006620`, "_blank");
     } finally {
       setSending(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      if (imageInputRef.current) imageInputRef.current.value = "";
     }
   };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: "document" | "image") => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setShowAttachMenu(false);
+    await uploadFile(file, file.name, type);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (imageInputRef.current) imageInputRef.current.value = "";
+  };
+
+  const startRecording = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm;codecs=opus" });
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+      setRecordingTime(0);
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        if (recordingIntervalRef.current) {
+          clearInterval(recordingIntervalRef.current);
+          recordingIntervalRef.current = null;
+        }
+
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        if (audioBlob.size > 0) {
+          const fileName = `voice_${Date.now()}.webm`;
+          await uploadFile(audioBlob, fileName, "audio");
+        }
+      };
+
+      mediaRecorder.start(250);
+      setIsRecording(true);
+
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingTime((prev) => prev + 1);
+      }, 1000);
+    } catch (err) {
+      console.error("Microphone error:", err);
+      toast.error("لا يمكن الوصول إلى الميكروفون. يرجى السماح بالإذن.");
+    }
+  }, []);
+
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+    }
+    setIsRecording(false);
+    setRecordingTime(0);
+  }, []);
+
+  const cancelRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.ondataavailable = null;
+      mediaRecorderRef.current.onstop = () => {
+        mediaRecorderRef.current?.stream?.getTracks().forEach((t) => t.stop());
+      };
+      mediaRecorderRef.current.stop();
+    }
+    if (recordingIntervalRef.current) {
+      clearInterval(recordingIntervalRef.current);
+      recordingIntervalRef.current = null;
+    }
+    audioChunksRef.current = [];
+    setIsRecording(false);
+    setRecordingTime(0);
+  }, []);
 
   return (
     <>
@@ -205,7 +306,17 @@ const WhatsAppChat = () => {
                         : "bg-white text-gray-900 rounded-bl-sm"
                     }`}
                   >
-                    <p className="whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+                    {msg.type === "audio" ? (
+                      <div className="flex items-center gap-2">
+                        <Mic className="w-4 h-4 text-[#25D366]" />
+                        <span>🎤 رسالة صوتية</span>
+                        {msg.audioDuration && (
+                          <span className="text-xs text-gray-500">{formatDuration(msg.audioDuration)}</span>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+                    )}
                     <span className="text-[10px] text-gray-500 mt-1 block text-left" dir="ltr">
                       {msg.timestamp.toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })}
                     </span>
@@ -246,30 +357,72 @@ const WhatsAppChat = () => {
               )}
             </AnimatePresence>
 
-            {/* Input */}
+            {/* Input / Recording */}
             <div className="bg-background border-t border-border px-3 py-2 flex items-center gap-2">
-              <button
-                onClick={() => setShowAttachMenu(!showAttachMenu)}
-                className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-accent hover:bg-accent/10 transition-colors"
-              >
-                <Paperclip className="w-5 h-5" />
-              </button>
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                placeholder="اكتب رسالتك..."
-                className="flex-1 bg-muted rounded-full px-4 py-2 text-sm font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#25D366]/50"
-                disabled={sending}
-              />
-              <button
-                onClick={sendMessage}
-                disabled={!input.trim() || sending}
-                className="w-9 h-9 rounded-full bg-[#25D366] flex items-center justify-center text-white hover:bg-[#20BD5A] transition-colors disabled:opacity-50"
-              >
-                {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              </button>
+              {isRecording ? (
+                <>
+                  {/* Cancel */}
+                  <button
+                    onClick={cancelRecording}
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                  {/* Recording indicator */}
+                  <div className="flex-1 flex items-center justify-center gap-2">
+                    <motion.div
+                      animate={{ opacity: [1, 0.3, 1] }}
+                      transition={{ repeat: Infinity, duration: 1.2 }}
+                      className="w-3 h-3 rounded-full bg-red-500"
+                    />
+                    <span className="text-sm font-body text-foreground font-medium" dir="ltr">
+                      {formatDuration(recordingTime)}
+                    </span>
+                  </div>
+                  {/* Stop & send */}
+                  <button
+                    onClick={stopRecording}
+                    className="w-9 h-9 rounded-full bg-[#25D366] flex items-center justify-center text-white hover:bg-[#20BD5A] transition-colors"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setShowAttachMenu(!showAttachMenu)}
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-accent hover:bg-accent/10 transition-colors"
+                  >
+                    <Paperclip className="w-5 h-5" />
+                  </button>
+                  <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                    placeholder="اكتب رسالتك..."
+                    className="flex-1 bg-muted rounded-full px-4 py-2 text-sm font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#25D366]/50"
+                    disabled={sending}
+                  />
+                  {input.trim() ? (
+                    <button
+                      onClick={sendMessage}
+                      disabled={sending}
+                      className="w-9 h-9 rounded-full bg-[#25D366] flex items-center justify-center text-white hover:bg-[#20BD5A] transition-colors disabled:opacity-50"
+                    >
+                      {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={startRecording}
+                      disabled={sending}
+                      className="w-9 h-9 rounded-full bg-[#25D366] flex items-center justify-center text-white hover:bg-[#20BD5A] transition-colors disabled:opacity-50"
+                    >
+                      {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mic className="w-4 h-4" />}
+                    </button>
+                  )}
+                </>
+              )}
             </div>
 
             {/* Hidden file inputs */}

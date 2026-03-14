@@ -358,7 +358,7 @@ const AdminDashboard = () => {
                   <CardContent className="p-4 flex items-center justify-between">
                     <div>
                       <h4 className="font-display font-bold text-foreground flex items-center gap-2">
-                        {p.published ? <Eye className="w-4 h-4 text-green-600" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
+                        {p.published ? <Eye className="w-4 h-4 text-accent" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
                         {p.title}
                       </h4>
                       <p className="text-xs text-muted-foreground font-body">{p.category} • {new Date(p.created_at).toLocaleDateString("ar")}</p>

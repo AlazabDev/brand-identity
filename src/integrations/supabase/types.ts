@@ -14,16 +14,219 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      blog_posts: {
+        Row: {
+          category: string | null
+          content: string | null
+          cover_image: string | null
+          created_at: string
+          excerpt: string | null
+          id: string
+          published: boolean | null
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          content?: string | null
+          cover_image?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          published?: boolean | null
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          content?: string | null
+          cover_image?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          published?: boolean | null
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      contact_messages: {
+        Row: {
+          area: string | null
+          business_type: string | null
+          created_at: string
+          email: string | null
+          id: string
+          mall: string | null
+          message: string | null
+          name: string
+          phone: string | null
+          read: boolean | null
+        }
+        Insert: {
+          area?: string | null
+          business_type?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          mall?: string | null
+          message?: string | null
+          name: string
+          phone?: string | null
+          read?: boolean | null
+        }
+        Update: {
+          area?: string | null
+          business_type?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          mall?: string | null
+          message?: string | null
+          name?: string
+          phone?: string | null
+          read?: boolean | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          area: string | null
+          category: string
+          client_name: string | null
+          completion_date: string | null
+          created_at: string
+          description: string | null
+          featured: boolean | null
+          id: string
+          images: string[] | null
+          mall: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          area?: string | null
+          category?: string
+          client_name?: string | null
+          completion_date?: string | null
+          created_at?: string
+          description?: string | null
+          featured?: boolean | null
+          id?: string
+          images?: string[] | null
+          mall?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          area?: string | null
+          category?: string
+          client_name?: string | null
+          completion_date?: string | null
+          created_at?: string
+          description?: string | null
+          featured?: boolean | null
+          id?: string
+          images?: string[] | null
+          mall?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      quote_requests: {
+        Row: {
+          area: string | null
+          budget: string | null
+          business_type: string | null
+          client_name: string
+          created_at: string
+          email: string | null
+          id: string
+          mall: string | null
+          notes: string | null
+          opening_date: string | null
+          phone: string | null
+          read: boolean | null
+          services: string[] | null
+          shop_name: string | null
+          shop_number: string | null
+          shop_status: string | null
+        }
+        Insert: {
+          area?: string | null
+          budget?: string | null
+          business_type?: string | null
+          client_name: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          mall?: string | null
+          notes?: string | null
+          opening_date?: string | null
+          phone?: string | null
+          read?: boolean | null
+          services?: string[] | null
+          shop_name?: string | null
+          shop_number?: string | null
+          shop_status?: string | null
+        }
+        Update: {
+          area?: string | null
+          budget?: string | null
+          business_type?: string | null
+          client_name?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          mall?: string | null
+          notes?: string | null
+          opening_date?: string | null
+          phone?: string | null
+          read?: boolean | null
+          services?: string[] | null
+          shop_name?: string | null
+          shop_number?: string | null
+          shop_status?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +353,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const

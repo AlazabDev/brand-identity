@@ -12,6 +12,8 @@ import QuotePage from "./pages/QuotePage.tsx";
 import FAQPage from "./pages/FAQPage.tsx";
 import PrivacyPage from "./pages/PrivacyPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import AdminLoginPage from "./pages/AdminLoginPage.tsx";
+import AdminDashboard from "./pages/AdminDashboard.tsx";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
@@ -39,6 +41,8 @@ const App = () => (
           <Route path="/quote" element={<QuotePage />} />
           <Route path="/faq" element={<FAQPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route path="/admin" element={<AdminDashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

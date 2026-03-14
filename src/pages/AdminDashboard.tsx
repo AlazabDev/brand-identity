@@ -184,8 +184,8 @@ const AdminDashboard = () => {
               {[
                 { label: "المشاريع", value: stats.projects, icon: FolderOpen, color: "bg-primary" },
                 { label: "المقالات", value: stats.posts, icon: FileText, color: "bg-accent" },
-                { label: "الرسائل", value: stats.contacts, icon: MessageSquare, color: "bg-green-600" },
-                { label: "طلبات العروض", value: stats.quotes, icon: FileQuestion, color: "bg-blue-600" },
+                { label: "الرسائل", value: stats.contacts, icon: MessageSquare, color: "bg-primary/80" },
+                { label: "طلبات العروض", value: stats.quotes, icon: FileQuestion, color: "bg-accent/80" },
               ].map((s) => (
                 <Card key={s.label} className="border-none shadow-md">
                   <CardContent className="p-4 flex items-center gap-4">

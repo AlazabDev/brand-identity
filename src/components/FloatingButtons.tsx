@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { ArrowUp, MessageCircle } from "lucide-react";
+import { ArrowUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import WhatsAppChat from "./WhatsAppChat";
 
 const FloatingButtons = () => {
   const [showTop, setShowTop] = useState(false);
@@ -13,15 +14,8 @@ const FloatingButtons = () => {
 
   return (
     <>
-      {/* WhatsApp */}
-      <a
-        href="https://wa.me/201004006620"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed bottom-6 left-6 z-50 w-14 h-14 rounded-full bg-[#25D366] flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-      >
-        <MessageCircle className="w-7 h-7 text-primary-foreground" />
-      </a>
+      {/* WhatsApp Chat Widget */}
+      <WhatsAppChat />
 
       {/* Scroll to top */}
       <AnimatePresence>

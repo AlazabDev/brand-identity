@@ -6,7 +6,7 @@ import { AnimatePresence } from "framer-motion";
 import { lazy, Suspense, useEffect } from "react";
 import SkipToContent from "@/components/SkipToContent";
 import LoadingScreen from "@/components/LoadingScreen";
-
+import ErrorBoundary from "@/components/ErrorBoundary";
 // Lazy load pages for better performance
 const Index = lazy(() => import("./pages/Index"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));

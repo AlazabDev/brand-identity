@@ -29,6 +29,7 @@ interface MaintenanceForm {
 
 const BUSINESS_PHONE = "+201004006620";
 const BUSINESS_NAME = "Brand Identity";
+const normalizePhone = (value: string) => value.replace(/[^\d]/g, "");
 
 const SERVICE_TYPES = [
   { value: "plumbing", label: "سباكة", icon: "🔧" },
@@ -208,14 +209,14 @@ const WhatsAppChat = () => {
     addUserMessage(text);
     try {
       const { error } = await supabase.functions.invoke("whatsapp", {
-        body: { action: "send", to: BUSINESS_PHONE, message: text },
+        body: { action: "send", to: normalizePhone(BUSINESS_PHONE), message: text },
       });
       if (error) throw error;
       addBotMessage("تم إرسال رسالتك بنجاح ✅\nسيتم الرد عليك عبر واتساب الأعمال مباشرة.");
-    } catch {
-      const waText = encodeURIComponent(text);
-      window.open(`https://wa.me/201004006620?text=${waText}`, "_blank");
-      addBotMessage("تم فتح واتساب لإرسال رسالتك مباشرة 📱");
+    } catch (err) {
+      console.error("Send message error:", err);
+      toast.error("تعذر الإرسال حالياً، يرجى المحاولة بعد قليل");
+      addBotMessage("تعذر إرسال الرسالة حالياً ❌\nيرجى المحاولة بعد قليل.");
     } finally {
       setSending(false);
     }
@@ -231,7 +232,7 @@ const WhatsAppChat = () => {
     try {
       const formData = new FormData();
       formData.append("file", file, fileName);
-      formData.append("to", BUSINESS_PHONE);
+      formData.append("to", normalizePhone(BUSINESS_PHONE));
       formData.append("mediaType", mediaType);
       formData.append("fileName", fileName);
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
@@ -243,9 +244,10 @@ const WhatsAppChat = () => {
       });
       if (!res.ok) throw new Error(`Upload failed [${res.status}]`);
       addBotMessage(mediaType === "audio" ? "تم إرسال الرسالة الصوتية بنجاح ✅" : "تم إرسال الملف بنجاح ✅");
-    } catch {
+    } catch (err) {
+      console.error("Upload file error:", err);
       toast.error("حدث خطأ في إرسال الملف");
-      window.open("https://wa.me/201004006620", "_blank");
+      addBotMessage("تعذر إرسال الملف حالياً ❌\nيرجى المحاولة بعد قليل.");
     } finally {
       setSending(false);
     }

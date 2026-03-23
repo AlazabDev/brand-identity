@@ -8,6 +8,18 @@ const corsHeaders = {
 const GRAPH_API = "https://graph.facebook.com/v21.0";
 const SEAFILE_URL = "https://seafile.alazab.com";
 
+const PHONE_NUMBER_ID_REGEX = /^\d{10,20}$/;
+
+const normalizePhone = (value: string) => value.replace(/[^\d]/g, "");
+
+const assertPhoneNumberId = (value: string) => {
+  if (!PHONE_NUMBER_ID_REGEX.test(value)) {
+    throw new Error(
+      "Invalid WHATSAPP_PHONE_NUMBER_ID. Use Meta Phone Number ID (digits only), not the display phone number."
+    );
+  }
+};
+
 async function uploadToSeafile(fileBlob: Blob, fileName: string, folder: string = "/whatsapp-chat"): Promise<string> {
   const SEAFILE_TOKEN = Deno.env.get("SEAFILE_TOKEN");
   const SEAFILE_REPO_ID = Deno.env.get("SEAFILE_REPO_ID");
@@ -88,10 +100,11 @@ serve(async (req) => {
 
   try {
     const WHATSAPP_ACCESS_TOKEN = Deno.env.get("WHATSAPP_ACCESS_TOKEN");
-    const WHATSAPP_PHONE_NUMBER_ID = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
+    const WHATSAPP_PHONE_NUMBER_ID = (Deno.env.get("WHATSAPP_PHONE_NUMBER_ID") || "").trim();
 
     if (!WHATSAPP_ACCESS_TOKEN) throw new Error("WHATSAPP_ACCESS_TOKEN not configured");
     if (!WHATSAPP_PHONE_NUMBER_ID) throw new Error("WHATSAPP_PHONE_NUMBER_ID not configured");
+    assertPhoneNumberId(WHATSAPP_PHONE_NUMBER_ID);
 
     const contentType = req.headers.get("content-type") || "";
 
@@ -99,11 +112,12 @@ serve(async (req) => {
     if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
       const file = formData.get("file") as File;
-      const to = formData.get("to") as string;
+      const to = normalizePhone((formData.get("to") as string) || "");
       const mediaType = formData.get("mediaType") as string || "document";
       const fileName = formData.get("fileName") as string || file?.name || "file";
 
       if (!file) throw new Error("No file provided");
+      if (!to) throw new Error("Recipient phone number is required");
 
       // Upload to Seafile
       const timestamp = Date.now();
@@ -145,6 +159,9 @@ serve(async (req) => {
             },
             body: JSON.stringify(msgPayload),
           });
+        } else {
+          const uploadErr = await uploadRes.text();
+          throw new Error(`WhatsApp media upload failed [${uploadRes.status}]: ${uploadErr}`);
         }
       } catch (waErr) {
         console.error("WhatsApp media send failed (file saved to Seafile):", waErr);
@@ -157,11 +174,15 @@ serve(async (req) => {
 
     // Handle JSON requests
     const { action, to, message } = await req.json();
+    const recipientPhone = normalizePhone((to || "").toString());
 
     if (action === "send") {
+      if (!recipientPhone) throw new Error("Recipient phone number is required");
+      if (!message || !message.toString().trim()) throw new Error("Message is required");
+
       const payload = {
         messaging_product: "whatsapp",
-        to,
+        to: recipientPhone,
         type: "text",
         text: { body: message },
       };

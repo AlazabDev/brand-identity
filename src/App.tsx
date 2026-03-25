@@ -46,6 +46,9 @@ function AnimatedRoutes() {
         <Route path="/quote" element={<QuotePage />} />
         <Route path="/faq" element={<FAQPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/cookies" element={<CookiePolicyPage />} />
+        <Route path="/data-deletion" element={<DataDeletionPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="*" element={<NotFound />} />

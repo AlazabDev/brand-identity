@@ -36,6 +36,9 @@ const Footer = () => {
                 { label: "مشاريعنا", href: "/projects" },
                 { label: "المدونة", href: "/blog" },
                 { label: "سياسة الخصوصية", href: "/privacy" },
+                { label: "شروط الاستخدام", href: "/terms" },
+                { label: "سياسة الكوكيز", href: "/cookies" },
+                { label: "حذف البيانات", href: "/data-deletion" },
               ].map((link) => (
                 <li key={link.href}>
                   <Link

@@ -17,6 +17,9 @@ const ContactPage = lazy(() => import("./pages/ContactPage"));
 const QuotePage = lazy(() => import("./pages/QuotePage"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
+const TermsPage = lazy(() => import("./pages/TermsPage"));
+const CookiePolicyPage = lazy(() => import("./pages/CookiePolicyPage"));
+const DataDeletionPage = lazy(() => import("./pages/DataDeletionPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminLoginPage = lazy(() => import("./pages/AdminLoginPage"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
@@ -43,6 +46,9 @@ function AnimatedRoutes() {
         <Route path="/quote" element={<QuotePage />} />
         <Route path="/faq" element={<FAQPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/cookies" element={<CookiePolicyPage />} />
+        <Route path="/data-deletion" element={<DataDeletionPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="*" element={<NotFound />} />

@@ -52,6 +52,7 @@ function AnimatedRoutes() {
         <Route path="/data-deletion" element={<DataDeletionPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/maintenance-tracking" element={<MaintenanceTrackingPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>

@@ -23,6 +23,7 @@ const DataDeletionPage = lazy(() => import("./pages/DataDeletionPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminLoginPage = lazy(() => import("./pages/AdminLoginPage"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const MaintenanceTrackingPage = lazy(() => import("./pages/MaintenanceTrackingPage"));
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,7 @@ function AnimatedRoutes() {
         <Route path="/data-deletion" element={<DataDeletionPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/maintenance-tracking" element={<MaintenanceTrackingPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>

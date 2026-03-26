@@ -18,7 +18,7 @@ const Index = () => {
     <PageTransition>
       <PageMeta
         title="تجهيز المحلات التجارية في المولات"
-        description="شركة Brand Identity متخصصة في تأسيس وتجهيز المحلات التجارية داخل المولات - تصميم، تصنيع، تنفيذ. أكثر من 200 مشروع منفذ و270 فرع أبو عوف."
+        description="شركة Brand Identity متخصصة في تأسيس وتجهيز المحلات التجارية داخل المولات - تصميم، تصنيع، تنفيذ. أكثر من 100 مشروع منفذ و135 فرع أبو عوف."
         canonical="https://brand-identity.alazab.com"
       />
       <div className="min-h-screen">

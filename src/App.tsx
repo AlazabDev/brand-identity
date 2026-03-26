@@ -23,6 +23,7 @@ const DataDeletionPage = lazy(() => import("./pages/DataDeletionPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminLoginPage = lazy(() => import("./pages/AdminLoginPage"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const MaintenanceTrackingPage = lazy(() => import("./pages/MaintenanceTrackingPage"));
 
 const queryClient = new QueryClient();
 

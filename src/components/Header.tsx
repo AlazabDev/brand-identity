@@ -10,7 +10,7 @@ const navLinks = [
   { label: "خدماتنا", href: "/services" },
   { label: "مشاريعنا", href: "/projects" },
   { label: "المدونة", href: "/blog" },
-  { label: "عملية العمل", href: "/work-process" },
+  { label: "كيف نعمل", href: "/works" },
   { label: "اتصل بنا", href: "/contact" },
 ];
 

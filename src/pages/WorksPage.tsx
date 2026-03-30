@@ -1,20 +1,55 @@
-import { useEffect, useRef, useState } from 'react';
-import { motion, useAnimation, useInView } from 'framer-motion';
+import { useState } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import type { LucideIcon } from 'lucide-react';
 import {
-  ArrowRight, Camera, CheckCircle, ClipboardCheck, CreditCard, HardHat,
-  LayoutDashboard, PaintRoller, Ruler, Shield, Smartphone, Sparkles, Video, Zap,
-  ChevronLeft, ChevronRight, Star, Phone, Mail, MapPin
+  ArrowRight,
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  CreditCard,
+  HardHat,
+  LayoutDashboard,
+  Mail,
+  MapPin,
+  Phone,
+  Ruler,
+  Shield,
+  Smartphone,
+  Sparkles,
+  Star,
+  Zap,
 } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
-// Image imports (using public folder path)
-const images = [
+type StatItem = {
+  value: string;
+  label: string;
+};
+
+type FeatureItem = {
+  title: string;
+  description: string;
+  image: string;
+  icon: LucideIcon;
+};
+
+type ProcessItem = {
+  step: string;
+  title: string;
+  description: string;
+  image: string;
+  icon: LucideIcon;
+  badge?: string;
+};
+
+const GALLERY_IMAGES = [
   '/upload/abuauf_10.jpg',
   '/upload/abuauf_11.jpg',
   '/upload/abuauf_12.jpg',
@@ -23,423 +58,584 @@ const images = [
   '/upload/abuauf_15.jpg',
   '/upload/abuauf_16.jpg',
   '/upload/abuauf_17.jpg',
+] as const;
+
+const HERO_STATS: StatItem[] = [
+  { value: '20+', label: 'سنة خبرة' },
+  { value: '100%', label: 'متابعة شفافة' },
+  { value: '24/7', label: 'دعم وتشغيل' },
 ];
 
+const FREE_SERVICES: FeatureItem[] = [
+  {
+    title: 'معاينة ورفع المقاسات',
+    description:
+      'نزور الموقع، نرفع المقاسات بدقة، ونحوّل المساحة إلى بيانات تنفيذية واضحة تسبق أي قرار.',
+    image: GALLERY_IMAGES[1],
+    icon: Ruler,
+  },
+  {
+    title: 'التصميم الأولي',
+    description:
+      'نقدم تصورًا بصريًا أوليًا يوضّح الاتجاه العام، الخامات، والألوان قبل بدء التنفيذ.',
+    image: GALLERY_IMAGES[2],
+    icon: Sparkles,
+  },
+  {
+    title: 'عرض سعر تفصيلي',
+    description:
+      'عرض سعر منظم وواضح يشرح البنود الفعلية بدون ضبابية أو مفاجآت لاحقة.',
+    image: GALLERY_IMAGES[3],
+    icon: CreditCard,
+  },
+];
+
+const PROCESS_STEPS: ProcessItem[] = [
+  {
+    step: '01',
+    title: 'التصميم ثلاثي الأبعاد',
+    description:
+      'نحوّل الفكرة إلى نموذج بصري واضح يساعدك على اتخاذ القرار قبل التنفيذ.',
+    image: GALLERY_IMAGES[4],
+    icon: LayoutDashboard,
+    badge: 'اعتماد كامل قبل التنفيذ',
+  },
+  {
+    step: '02',
+    title: 'المتابعة الإلكترونية',
+    description:
+      'تقارير مصورة، متابعة مراحل، ووضوح يومي في حركة التنفيذ والخامات.',
+    image: GALLERY_IMAGES[5],
+    icon: Smartphone,
+    badge: 'تقارير يومية مصورة',
+  },
+  {
+    step: '03',
+    title: 'التنفيذ المتكامل',
+    description:
+      'تنفيذ وتشطيب وتصنيع وحدات حسب المقاسات الفعلية لضمان دقة النتيجة النهائية.',
+    image: GALLERY_IMAGES[6],
+    icon: HardHat,
+  },
+  {
+    step: '04',
+    title: 'التشغيل والحماية',
+    description:
+      'تشغيل الموقع بأنظمة الكاشير والمراقبة والحماية ليكون جاهزًا للعمل الفوري.',
+    image: GALLERY_IMAGES[7],
+    icon: Shield,
+    badge: 'جاهز للتشغيل',
+  },
+];
+
+const TRUST_POINTS = [
+  'خبرة ممتدة في التجهيزات التجارية والمعمارية',
+  'متابعة تنفيذية واضحة من البداية للتسليم',
+  'ضمان على الأعمال وخدمة ما بعد التسليم',
+];
+
+function SectionHeading({
+  eyebrow,
+  title,
+  description,
+  centered = true,
+}: {
+  eyebrow: string;
+  title: string;
+  description?: string;
+  centered?: boolean;
+}) {
+  return (
+    <div className={centered ? 'mx-auto max-w-3xl text-center' : 'max-w-3xl'}>
+      <Badge
+        variant="outline"
+        className="mb-4 border-amber-500/30 bg-amber-500/5 text-amber-600"
+      >
+        {eyebrow}
+      </Badge>
+      <h2 className="text-3xl font-bold leading-tight text-slate-900 md:text-4xl">
+        {title}
+      </h2>
+      {description ? (
+        <p className="mt-4 text-base leading-8 text-slate-600 md:text-lg">
+          {description}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function StatCard({ value, label }: StatItem) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4 backdrop-blur-sm">
+      <div className="text-2xl font-bold text-white md:text-3xl">{value}</div>
+      <div className="mt-1 text-sm text-white/70">{label}</div>
+    </div>
+  );
+}
+
+function FeatureCard({ item }: { item: FeatureItem }) {
+  return (
+    <Card className="group h-full overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
+      <div className="relative h-56 overflow-hidden">
+        <img
+          src={item.image}
+          alt={item.title}
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+          loading="lazy"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
+      </div>
+
+      <CardContent className="p-6">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600">
+          <item.icon className="h-7 w-7" />
+        </div>
+
+        <h3 className="text-xl font-bold text-slate-900">{item.title}</h3>
+        <p className="mt-3 leading-8 text-slate-600">{item.description}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ProcessCard({ item }: { item: ProcessItem }) {
+  return (
+    <Card className="group relative h-full overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
+      <div className="relative h-52 overflow-hidden">
+        <img
+          src={item.image}
+          alt={item.title}
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+          loading="lazy"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+      </div>
+
+      <div className="absolute right-5 top-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500 text-sm font-bold text-black shadow-lg">
+        {item.step}
+      </div>
+
+      <CardContent className="p-6">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-white">
+          <item.icon className="h-6 w-6" />
+        </div>
+
+        <h3 className="text-xl font-bold text-slate-900">{item.title}</h3>
+        <p className="mt-3 leading-8 text-slate-600">{item.description}</p>
+
+        {item.badge ? (
+          <Badge className="mt-5 bg-amber-500/10 text-amber-700 hover:bg-amber-500/10">
+            {item.badge}
+          </Badge>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function WorkProcessPage() {
-  const [activeImage, setActiveImage] = useState(0);
   const [galleryIndex, setGalleryIndex] = useState(0);
-  const controls = useAnimation();
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true });
+  const shouldReduceMotion = useReducedMotion();
 
-  useEffect(() => {
-    if (inView) {
-      controls.start('visible');
-    }
-  }, [controls, inView]);
+  const currentImage = GALLERY_IMAGES[galleryIndex];
 
-  // Animation variants
-  const fadeInUp = {
-    hidden: { opacity: 0, y: 60 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } }
+  const nextSlide = () => {
+    setGalleryIndex((prev) => (prev + 1) % GALLERY_IMAGES.length);
   };
 
-  const staggerContainer = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.2 } }
+  const prevSlide = () => {
+    setGalleryIndex((prev) => (prev - 1 + GALLERY_IMAGES.length) % GALLERY_IMAGES.length);
   };
 
-  const nextImage = () => setActiveImage((prev) => (prev + 1) % images.length);
-  const prevImage = () => setActiveImage((prev) => (prev - 1 + images.length) % images.length);
-  const nextGallery = () => setGalleryIndex((prev) => (prev + 1) % images.length);
-  const prevGallery = () => setGalleryIndex((prev) => (prev - 1 + images.length) % images.length);
+  const goToSlide = (index: number) => {
+    setGalleryIndex(index);
+  };
 
   return (
-    <div className="flex flex-col min-h-screen overflow-x-hidden" dir="rtl">
+    <div className="min-h-screen overflow-x-hidden bg-white text-slate-900" dir="rtl">
       <Header />
-      <main className="flex-grow">
-        {/* Hero Section with Background Image */}
-        <section className="relative h-screen min-h-[600px] flex items-center justify-center overflow-hidden">
-          <div className="absolute inset-0 z-0">
+
+      <main>
+        <section className="relative isolate overflow-hidden bg-slate-950">
+          <div className="absolute inset-0">
             <img
-              src={images[0]}
-              alt="Hero background"
-              className="w-full h-full object-cover"
+              src={GALLERY_IMAGES[0]}
+              alt="مشهد من أعمال العزب"
+              className="h-full w-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/50" />
+            <div className="absolute inset-0 bg-black/60" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(245,191,35,0.18),transparent_35%)]" />
           </div>
-          <div className="relative z-10 container mx-auto px-4 text-center text-white">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              <Badge variant="secondary" className="mb-4 bg-amber-500/20 text-amber-500 border-amber-500/300 backdrop-blur-sm">
-                هوايه · العلامة التجارية لشركة العزب
-              </Badge>
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-                حيث تتحول فكرة محلك <br />
-                إلى واقع احترافي بتقنية متكاملة
-              </h1>
-              <p className="text-lg md:text-xl text-gray-200 mb-8 max-w-2xl mx-auto">
-                من أول معاينة الخامات حتى لحظة تشغيل كاميرات المراقبة وكاشير البيع، نرافقك في رحلة شفافة وممنهجة.
-                خبراء العزب للخدمات المعمارية يصممون وينفذون حلمك بإدارة إلكترونية متطورة.
-              </p>
-              <Button size="lg" className="bg-amber-500 hover:bg-amber-600 text-black font-semibold px-8 shadow-lg">
-                احصل على استشارة مجانية ومعاينة أولية
-                <ArrowRight className="mr-2 h-5 w-5" />
-              </Button>
-            </motion.div>
-          </div>
-          {/* Scroll indicator */}
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-            <div className="w-6 h-10 border-2 border-white rounded-full flex justify-center">
-              <div className="w-1 h-2 bg-white rounded-full mt-2 animate-pulse" />
-            </div>
-          </div>
-        </section>
 
-        {/* Free Services Section */}
-        <section className="py-24 bg-white">
-          <div className="container mx-auto px-4">
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={staggerContainer}
-              className="text-center mb-16"
-            >
-              <motion.div variants={fadeInUp}>
-                <Badge variant="outline" className="mb-2">نبدأ معاً بدون أي التزامات مالية</Badge>
-                <h2 className="text-3xl md:text-4xl font-bold text-slate-800">خدماتنا التمهيدية المجانية</h2>
-                <p className="text-gray-600 mt-2">كل ما تحتاجه لتبدأ مشوارك بثقة</p>
+          <div className="relative mx-auto flex min-h-[92vh] max-w-7xl items-center px-4 py-24 sm:px-6 lg:px-8">
+            <div className="grid w-full items-center gap-12 lg:grid-cols-[1.2fr_0.8fr]">
+              <motion.div
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: shouldReduceMotion ? 0 : 0.7 }}
+                className="max-w-3xl"
+              >
+                <Badge className="mb-6 bg-amber-500/15 text-amber-400 hover:bg-amber-500/15">
+                  هوايه · العلامة التجارية لشركة العزب
+                </Badge>
+
+                <h1 className="text-4xl font-bold leading-tight text-white md:text-6xl lg:text-7xl">
+                  تجهيز معماري راقٍ
+                  <span className="block text-amber-400">بمنهج تنفيذي واضح</span>
+                </h1>
+
+                <p className="mt-6 max-w-2xl text-lg leading-8 text-white/80 md:text-xl">
+                  من المعاينة والتصميم وحتى التشغيل النهائي، نبني لك تجربة احترافية
+                  منظمة، بصريًا وتنفيذيًا، مع متابعة حقيقية وليست شكلية.
+                </p>
+
+                <div className="mt-8 flex flex-wrap gap-4">
+                  <Button
+                    size="lg"
+                    className="h-12 rounded-2xl bg-amber-500 px-7 text-base font-semibold text-black hover:bg-amber-600"
+                    asChild
+                  >
+                    <a href="/contact">
+                      اطلب معاينة مجانية
+                      <ArrowRight className="mr-2 h-5 w-5" />
+                    </a>
+                  </Button>
+
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="h-12 rounded-2xl border-white/20 bg-white/5 px-7 text-base text-white hover:bg-white hover:text-slate-900"
+                    asChild
+                  >
+                    <a href="tel:+201004006620">اتصل بنا الآن</a>
+                  </Button>
+                </div>
+
+                <div className="mt-10 grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-3">
+                  {HERO_STATS.map((item) => (
+                    <StatCard key={item.label} {...item} />
+                  ))}
+                </div>
               </motion.div>
-            </motion.div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[
-                {
-                  icon: Ruler,
-                  title: "معاينة ورفع المقاسات",
-                  desc: "نزور موقعك بدقة متناهية، نرفع القياسات باستخدام أدوات احترافية وندرجها في النظام.",
-                  img: images[1]
-                },
-                {
-                  icon: Sparkles,
-                  title: "التصميم الأولي (Mood Board)",
-                  desc: "نقدم لك تصوراً مبدئياً يعكس هوية محلك، ونحدد الخامات والألوان المقترحة.",
-                  img: images[2]
-                },
-                {
-                  icon: CreditCard,
-                  title: "عرض السعر الشامل",
-                  desc: "نرسل لك عرض سعر تفصيلي (BOQ) واضح، يوضح كل بند من بنود العمل دون أي رسوم إضافية.",
-                  img: images[3]
-                }
-              ].map((item, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1, duration: 0.5 }}
-                  viewport={{ once: true }}
-                >
-                  <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-500 group overflow-hidden">
-                    <div className="h-48 overflow-hidden">
-                      <img
-                        src={item.img}
-                        alt={item.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                      />
-                    </div>
-                    <CardHeader className="text-center pt-6">
-                      <div className="mx-auto bg-amber-100 w-16 h-16 rounded-full flex items-center justify-center mb-4 group-hover:bg-amber-500 transition-colors duration-300">
-                        <item.icon className="h-8 w-8 text-amber-600 group-hover:text-white" />
+
+              <motion.div
+                initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: shouldReduceMotion ? 0 : 0.7, delay: shouldReduceMotion ? 0 : 0.1 }}
+                className="hidden lg:block"
+              >
+                <div className="rounded-[2rem] border border-white/10 bg-white/5 p-5 shadow-2xl backdrop-blur-sm">
+                  <div className="overflow-hidden rounded-[1.5rem]">
+                    <img
+                      src={GALLERY_IMAGES[2]}
+                      alt="نموذج من أعمال التجهيز التجاري"
+                      className="h-[520px] w-full object-cover"
+                    />
+                  </div>
+
+                  <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                    <div className="rounded-2xl bg-white/5 p-4">
+                      <div className="mb-2 flex items-center gap-2 text-amber-400">
+                        <LayoutDashboard className="h-5 w-5" />
+                        <span className="font-semibold">إدارة منظمة</span>
                       </div>
-                      <CardTitle className="text-xl text-slate-800">{item.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription className="text-center text-gray-600">{item.desc}</CardDescription>
-                    </CardContent>
-                  </Card>
-                </motion.div>
+                      <p className="text-sm leading-7 text-white/75">
+                        تقارير واضحة، تسلسل منطقي، ومراحل تنفيذ قابلة للمتابعة.
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl bg-white/5 p-4">
+                      <div className="mb-2 flex items-center gap-2 text-amber-400">
+                        <Zap className="h-5 w-5" />
+                        <span className="font-semibold">تنفيذ فعلي</span>
+                      </div>
+                      <p className="text-sm leading-7 text-white/75">
+                        النتيجة ليست عرضًا بصريًا فقط، بل تشغيل حقيقي جاهز للعمل.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <SectionHeading
+              eyebrow="البداية الصحيحة"
+              title="خدمات تمهيدية مجانية تضع المشروع على أرض واضحة"
+              description="هذه المرحلة ليست تجميلًا بصريًا. هذه هي المرحلة التي تمنع التشتت وتضبط القرار من أول خطوة."
+            />
+
+            <div className="mt-14 grid gap-8 md:grid-cols-3">
+              {FREE_SERVICES.map((item) => (
+                <FeatureCard key={item.title} item={item} />
               ))}
             </div>
           </div>
         </section>
 
-        {/* Journey Timeline */}
-        <section className="py-24 bg-gray-50">
-          <div className="container mx-auto px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-              className="text-center mb-16"
-            >
-              <Badge variant="outline" className="mb-2">رحلة العمل</Badge>
-              <h2 className="text-3xl md:text-4xl font-bold text-slate-800">من الفكرة إلى التسليم .. رحلة عمل بشفافية 100%</h2>
-            </motion.div>
+        <section className="bg-slate-50 py-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <SectionHeading
+              eyebrow="رحلة العمل"
+              title="من الفكرة إلى التسليم بمنهجية ثابتة"
+              description="كل مرحلة لها وظيفة واضحة، وكل قرار فيها يخدم جودة التنفيذ والسرعة والانضباط."
+            />
 
-            <div className="relative grid grid-cols-1 md:grid-cols-4 gap-8">
-              {[
-                {
-                  step: "1",
-                  icon: LayoutDashboard,
-                  title: "التصميم ثلاثي الأبعاد",
-                  desc: "نبدأ في تصميم نموذج 3D دقيق للمساحة. جلسات افتراضية للتعديل والإضافة حتى ترى التفاصيل قبل التنفيذ.",
-                  badge: "لن نبدأ التنفيذ إلا بعد موافقتك",
-                  img: images[4]
-                },
-                {
-                  step: "2",
-                  icon: Smartphone,
-                  title: "نظام العزب للمتابعة",
-                  desc: "حساب خاص بك داخل نظامنا الإلكتروني. تقارير يومية مصورة، متابعة الخامات الداخلة والخارجة، وتقييم فوري للمراحل.",
-                  badge: "تقرير يومي مصور • شفافية الخامات",
-                  img: images[5]
-                },
-                {
-                  step: "3",
-                  icon: HardHat,
-                  title: "التنفيذ المتكامل",
-                  desc: "التأسيس، التشطيب، وتصنيع الوحدات حسب المقاسات المطلوبة في ورشنا الخاصة لضمان الجودة العالية.",
-                  img: images[6]
-                },
-                {
-                  step: "4",
-                  icon: Shield,
-                  title: "التشغيل والحماية",
-                  desc: "تركيب كاميرات مراقبة، كاشير متطور، وأنظمة إنذار وإطفاء حريق وفق متطلبات الدفاع المدني.",
-                  badge: "نظام جاهز للتشغيل الفوري",
-                  img: images[7]
-                }
-              ].map((item, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1, duration: 0.5 }}
-                  viewport={{ once: true }}
-                  className="relative group"
-                >
-                  <Card className="h-full overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-                    <div className="h-48 overflow-hidden">
-                      <img
-                        src={item.img}
-                        alt={item.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    </div>
-                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-amber-500 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shadow-lg z-10">
-                      {item.step}
-                    </div>
-                    <CardHeader className="pt-8">
-                      <div className="flex justify-center mb-3">
-                        <div className="bg-amber-100 p-3 rounded-full">
-                          <item.icon className="h-6 w-6 text-amber-600" />
-                        </div>
-                      </div>
-                      <CardTitle className="text-center text-xl">{item.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-center">
-                      <p className="text-gray-600 mb-3">{item.desc}</p>
-                      {item.badge && (
-                        <Badge variant="secondary" className="mt-2 text-xs">
-                          {item.badge}
-                        </Badge>
-                      )}
-                    </CardContent>
-                  </Card>
-                </motion.div>
+            <div className="mt-14 grid gap-8 md:grid-cols-2 xl:grid-cols-4">
+              {PROCESS_STEPS.map((item) => (
+                <ProcessCard key={item.step} item={item} />
               ))}
             </div>
           </div>
         </section>
 
-        {/* Gallery Section with Carousel */}
-        <section className="py-24 bg-white">
-          <div className="container mx-auto px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-              className="text-center mb-12"
-            >
-              <Badge variant="outline" className="mb-2">معرض الأعمال</Badge>
-              <h2 className="text-3xl md:text-4xl font-bold text-slate-800">نفخر بما نقدمه لعملائنا</h2>
-              <p className="text-gray-600 mt-2">نماذج حقيقية من مشاريعنا المنفذة بأعلى معايير الجودة</p>
-            </motion.div>
+        <section className="py-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <SectionHeading
+              eyebrow="معرض الأعمال"
+              title="أعمال حقيقية بصياغة عرض تليق بالمستوى"
+              description="واجهة المعرض هنا أصبحت أنظف، أوضح، وأسهل في الاستخدام على الموبايل والديسكتوب."
+            />
 
-            <div className="relative max-w-5xl mx-auto">
-              <div className="overflow-hidden rounded-2xl shadow-2xl">
+            <div className="mt-14 grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
+              <div className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl">
                 <Dialog>
                   <DialogTrigger asChild>
-                    <div className="cursor-pointer">
-                      <img
-                        src={images[galleryIndex]}
-                        alt={`Project ${galleryIndex + 1}`}
-                        className="w-full h-[500px] object-cover transition-transform duration-300 hover:scale-105"
-                      />
-                    </div>
+                    <button
+                      type="button"
+                      className="block w-full text-right"
+                      aria-label="فتح الصورة بالحجم الكامل"
+                    >
+                      <div className="relative aspect-[16/10] overflow-hidden">
+                        <AnimatePresence mode="wait">
+                          <motion.img
+                            key={currentImage}
+                            src={currentImage}
+                            alt={`صورة مشروع رقم ${galleryIndex + 1}`}
+                            className="h-full w-full object-cover"
+                            initial={shouldReduceMotion ? false : { opacity: 0, scale: 1.03 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={shouldReduceMotion ? {} : { opacity: 0, scale: 0.99 }}
+                            transition={{ duration: shouldReduceMotion ? 0 : 0.35 }}
+                          />
+                        </AnimatePresence>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+                      </div>
+                    </button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-4xl p-0 bg-black/90">
-                    <img src={images[galleryIndex]} alt="Full size" className="w-full h-auto max-h-[80vh] object-contain" />
+
+                  <DialogContent className="max-w-6xl border-none bg-black/95 p-0">
+                    <img
+                      src={currentImage}
+                      alt={`صورة مشروع رقم ${galleryIndex + 1}`}
+                      className="max-h-[85vh] w-full object-contain"
+                    />
                   </DialogContent>
                 </Dialog>
-              </div>
-              <button
-                onClick={prevGallery}
-                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 rounded-full p-2 shadow-lg transition-all"
-              >
-                <ChevronLeft className="h-6 w-6" />
-              </button>
-              <button
-                onClick={nextGallery}
-                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 rounded-full p-2 shadow-lg transition-all"
-              >
-                <ChevronRight className="h-6 w-6" />
-              </button>
-            </div>
-            <div className="flex justify-center gap-2 mt-6">
-              {images.map((_, idx) => (
+
                 <button
-                  key={idx}
-                  onClick={() => setGalleryIndex(idx)}
-                  className={`w-2 h-2 rounded-full transition-all ${idx === galleryIndex ? 'bg-amber-500 w-6' : 'bg-gray-300'}`}
-                />
-              ))}
+                  type="button"
+                  onClick={prevSlide}
+                  aria-label="الصورة السابقة"
+                  className="absolute right-4 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-slate-900 shadow-lg transition hover:bg-white"
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={nextSlide}
+                  aria-label="الصورة التالية"
+                  className="absolute left-4 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-slate-900 shadow-lg transition hover:bg-white"
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="rounded-[2rem] border border-slate-200 bg-slate-50 p-6">
+                  <h3 className="text-2xl font-bold text-slate-900">تفاصيل العرض</h3>
+                  <p className="mt-3 leading-8 text-slate-600">
+                    تم تنظيم المعرض ليكون أقرب لصفحة إنتاجية فعلية: صورة رئيسية قوية،
+                    تحكم مباشر، وصور مصغرة واضحة للاختيار السريع.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-4 gap-3">
+                  {GALLERY_IMAGES.map((image, index) => (
+                    <button
+                      key={image}
+                      type="button"
+                      onClick={() => goToSlide(index)}
+                      aria-label={`عرض الصورة رقم ${index + 1}`}
+                      className={`overflow-hidden rounded-2xl border transition ${
+                        galleryIndex === index
+                          ? 'border-amber-500 ring-2 ring-amber-500/30'
+                          : 'border-slate-200 hover:border-slate-300'
+                      }`}
+                    >
+                      <img
+                        src={image}
+                        alt={`معاينة رقم ${index + 1}`}
+                        className="h-20 w-full object-cover"
+                        loading="lazy"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Branding Section with Tabs for More Detail */}
-        <section className="py-24 bg-gray-50">
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col lg:flex-row items-center gap-12">
-              <motion.div
-                initial={{ opacity: 0, x: -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6 }}
-                viewport={{ once: true }}
-                className="flex-1"
-              >
-                <Badge variant="outline" className="mb-2">من نحن</Badge>
-                <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">العزب للخدمات المعمارية .. إرث من التميز</h2>
-                <p className="text-gray-600 leading-relaxed mb-6">
-                  "هوايه" ليست مجرد علامة تجارية، بل هي الفرع المتخصص لتجهيز المحلات التجارية الحديثة ضمن مجموعة شركة العزب للخدمات المعمارية.
-                  نحن ندمج خبراتنا الهندسية العريقة مع أحدث أنظمة إدارة المشاريع التكنولوجية (Proptech) لنقدم لك تجربة إنشاء متكاملة، خالية من التعقيدات، وبنهاية مضمونة.
-                </p>
-                <Tabs defaultValue="quality" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3 bg-gray-200">
-                    <TabsTrigger value="quality">الجودة</TabsTrigger>
-                    <TabsTrigger value="tech">التكنولوجيا</TabsTrigger>
-                    <TabsTrigger value="support">الدعم</TabsTrigger>
+        <section className="bg-slate-50 py-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid items-center gap-12 lg:grid-cols-2">
+              <div>
+                <SectionHeading
+                  eyebrow="من نحن"
+                  title="العزب للخدمات المعمارية"
+                  description="ليست الفكرة عندنا مجرد تنفيذ بنود، بل بناء تجربة عميل مريحة، واضحة، وراقية من أول اتصال وحتى التشغيل."
+                  centered={false}
+                />
+
+                <Tabs defaultValue="quality" className="mt-8">
+                  <TabsList className="grid w-full grid-cols-3 rounded-2xl bg-white">
+                    <TabsTrigger value="quality" className="rounded-2xl">
+                      الجودة
+                    </TabsTrigger>
+                    <TabsTrigger value="tech" className="rounded-2xl">
+                      التكنولوجيا
+                    </TabsTrigger>
+                    <TabsTrigger value="support" className="rounded-2xl">
+                      الدعم
+                    </TabsTrigger>
                   </TabsList>
-                  <TabsContent value="quality" className="mt-4">
+
+                  <TabsContent value="quality" className="mt-6 rounded-3xl bg-white p-6 shadow-sm">
                     <div className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 text-green-500 mt-1" />
+                      <CheckCircle className="mt-1 h-5 w-5 text-emerald-500" />
                       <div>
-                        <h4 className="font-semibold">أعلى معايير الجودة</h4>
-                        <p className="text-gray-600 text-sm">نستخدم أفضل الخامات ونطبق معايير صارمة لضمان نتيجة تدوم طويلاً.</p>
+                        <h3 className="text-lg font-bold text-slate-900">معيار جودة واضح</h3>
+                        <p className="mt-2 leading-8 text-slate-600">
+                          خامات مناسبة، تنفيذ مضبوط، ومخرجات نهائية تحترم الشكل والعمر التشغيلي.
+                        </p>
                       </div>
                     </div>
                   </TabsContent>
-                  <TabsContent value="tech" className="mt-4">
+
+                  <TabsContent value="tech" className="mt-6 rounded-3xl bg-white p-6 shadow-sm">
                     <div className="flex items-start gap-3">
-                      <Zap className="h-5 w-5 text-amber-500 mt-1" />
+                      <Zap className="mt-1 h-5 w-5 text-amber-500" />
                       <div>
-                        <h4 className="font-semibold">إدارة إلكترونية متكاملة</h4>
-                        <p className="text-gray-600 text-sm">نظام متابعة لحظي وتقارير مصورة تضعك في قلب المشروع.</p>
+                        <h3 className="text-lg font-bold text-slate-900">متابعة إلكترونية حقيقية</h3>
+                        <p className="mt-2 leading-8 text-slate-600">
+                          وضوح في المراحل والتقارير والصور، بدل المتابعة العشوائية أو الانطباعية.
+                        </p>
                       </div>
                     </div>
                   </TabsContent>
-                  <TabsContent value="support" className="mt-4">
+
+                  <TabsContent value="support" className="mt-6 rounded-3xl bg-white p-6 shadow-sm">
                     <div className="flex items-start gap-3">
-                      <Star className="h-5 w-5 text-amber-500 mt-1" />
+                      <Star className="mt-1 h-5 w-5 text-amber-500" />
                       <div>
-                        <h4 className="font-semibold">دعم ما بعد التسليم</h4>
-                        <p className="text-gray-600 text-sm">ضمان على جميع الأعمال وخدمة ما بعد البناء.</p>
+                        <h3 className="text-lg font-bold text-slate-900">استمرارية بعد التسليم</h3>
+                        <p className="mt-2 leading-8 text-slate-600">
+                          لأن التسليم ليس نهاية العلاقة، بل بداية تشغيل مستقر ومرتب.
+                        </p>
                       </div>
                     </div>
                   </TabsContent>
                 </Tabs>
-                <div className="flex flex-wrap gap-4 mt-8">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                    <span>خبرة تمتد لأكثر من 20 عامًا</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                    <span>فريق متكامل من المهندسين والفنيين</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                    <span>ضمان على جميع الأعمال</span>
-                  </div>
+
+                <div className="mt-8 space-y-3">
+                  {TRUST_POINTS.map((point) => (
+                    <div key={point} className="flex items-start gap-3">
+                      <CheckCircle className="mt-1 h-5 w-5 text-emerald-500" />
+                      <span className="leading-8 text-slate-700">{point}</span>
+                    </div>
+                  ))}
                 </div>
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, x: 30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6 }}
-                viewport={{ once: true }}
-                className="flex-1"
-              >
+              </div>
+
+              <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl">
                 <img
-                  src={images[2]} // using one of the images
-                  alt="Team working"
-                  className="rounded-xl shadow-xl w-full object-cover h-[400px]"
+                  src={GALLERY_IMAGES[2]}
+                  alt="فريق العمل"
+                  className="h-[520px] w-full object-cover"
                 />
-              </motion.div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* CTA Section */}
-        <section className="py-24 bg-gradient-to-r from-slate-900 to-slate-800 text-white relative overflow-hidden">
-          <div className="absolute inset-0 opacity-10">
-            <img src={images[0]} alt="Background" className="w-full h-full object-cover" />
+        <section className="relative overflow-hidden bg-slate-950 py-24 text-white">
+          <div className="absolute inset-0 opacity-15">
+            <img
+              src={GALLERY_IMAGES[0]}
+              alt="خلفية قسم التواصل"
+              className="h-full w-full object-cover"
+            />
           </div>
-          <div className="container mx-auto px-4 text-center relative z-10">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-3xl md:text-5xl font-bold mb-4">جاهز تحول محلك لأحدث المحلات في المنطقة؟</h2>
-              <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-                تواصل مع خبراء هوايه (العلامة التجارية لشركة العزب للخدمات المعمارية) الآن.
-              </p>
-              <div className="flex flex-wrap justify-center gap-4">
-                <Button size="lg" className="bg-amber-500 hover:bg-amber-600 text-black font-semibold px-8">
+
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(245,191,35,0.18),transparent_35%)]" />
+
+          <div className="relative mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8">
+            <h2 className="text-3xl font-bold leading-tight md:text-5xl">
+              جاهز نحول فكرتك إلى مشروع منفذ باحتراف؟
+            </h2>
+
+            <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-white/75">
+              تواصل الآن مع فريق العزب، وابدأ بخطوة واضحة بدل الدوران بين الوعود.
+            </p>
+
+            <div className="mt-8 flex flex-wrap justify-center gap-4">
+              <Button
+                size="lg"
+                className="h-12 rounded-2xl bg-amber-500 px-7 text-base font-semibold text-black hover:bg-amber-600"
+                asChild
+              >
+                <a href="/contact">
                   اطلب معاينة مجانية
                   <ArrowRight className="mr-2 h-5 w-5" />
-                </Button>
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-slate-900">
-                  اتصل بنا الآن
-                </Button>
+                </a>
+              </Button>
+
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-12 rounded-2xl border-white/20 bg-white/5 px-7 text-base text-white hover:bg-white hover:text-slate-900"
+                asChild
+              >
+                <a href="tel:+201004006620">اتصل الآن</a>
+              </Button>
+            </div>
+
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm text-white/75">
+              <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-amber-400" />
+                <span>+201004006620</span>
               </div>
-              <div className="mt-8 flex flex-wrap justify-center gap-6 text-sm text-gray-300">
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4" />
-                  <span>+201004006620</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  <span>support@alazab.com</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  <span>القاهرة، مصر</span>
-                </div>
+
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-amber-400" />
+                <span>support@alazab.com</span>
               </div>
-            </motion.div>
+
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-amber-400" />
+                <span>القاهرة، مصر</span>
+              </div>
+            </div>
           </div>
         </section>
       </main>
+
       <Footer />
     </div>
   );

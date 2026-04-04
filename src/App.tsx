@@ -58,6 +58,10 @@ function AnimatedRoutes() {
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/cookies" element={<CookiePolicyPage />} />
         <Route path="/data-deletion" element={<DataDeletionPage />} />
+        <Route path="/team" element={<TeamPage />} />
+        <Route path="/partners" element={<PartnersPage />} />
+        <Route path="/careers" element={<CareersPage />} />
+        <Route path="/projects/:id" element={<ProjectDetailPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/maintenance-tracking" element={<MaintenanceTrackingPage />} />

@@ -92,6 +92,42 @@ export type Database = {
         }
         Relationships: []
       }
+      job_applications: {
+        Row: {
+          created_at: string
+          email: string | null
+          experience_years: string | null
+          full_name: string
+          id: string
+          message: string | null
+          phone: string | null
+          position: string
+          read: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          experience_years?: string | null
+          full_name: string
+          id?: string
+          message?: string | null
+          phone?: string | null
+          position: string
+          read?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          experience_years?: string | null
+          full_name?: string
+          id?: string
+          message?: string | null
+          phone?: string | null
+          position?: string
+          read?: boolean | null
+        }
+        Relationships: []
+      }
       projects: {
         Row: {
           area: string | null

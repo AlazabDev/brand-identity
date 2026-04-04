@@ -7,6 +7,10 @@ import { lazy, Suspense, useEffect } from "react";
 import SkipToContent from "@/components/SkipToContent";
 import LoadingScreen from "@/components/LoadingScreen";
 import ErrorBoundary from "@/components/ErrorBoundary";
+<<<<<<< HEAD
+=======
+import { CookieConsent } from "@/components/CookieConsent";
+>>>>>>> origin/lovable-sync-1775275767
 // Lazy load pages for better performance
 const Index = lazy(() => import("./pages/Index"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
@@ -69,6 +73,10 @@ const App = () => (
           <ScrollToTop />
           <Suspense fallback={<LoadingScreen />}>
             <AnimatedRoutes />
+<<<<<<< HEAD
+=======
+            <CookieConsent />
+>>>>>>> origin/lovable-sync-1775275767
           </Suspense>
         </BrowserRouter>
       </TooltipProvider>

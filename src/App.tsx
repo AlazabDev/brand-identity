@@ -70,6 +70,7 @@ const App = () => (
           <ScrollToTop />
           <Suspense fallback={<LoadingScreen />}>
             <AnimatedRoutes />
+            <CookieConsent />
           </Suspense>
         </BrowserRouter>
       </TooltipProvider>

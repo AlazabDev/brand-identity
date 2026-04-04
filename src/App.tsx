@@ -7,6 +7,7 @@ import { lazy, Suspense, useEffect } from "react";
 import SkipToContent from "@/components/SkipToContent";
 import LoadingScreen from "@/components/LoadingScreen";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { CookieConsent } from "@/components/CookieConsent";
 // Lazy load pages for better performance
 const Index = lazy(() => import("./pages/Index"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
@@ -69,6 +70,7 @@ const App = () => (
           <ScrollToTop />
           <Suspense fallback={<LoadingScreen />}>
             <AnimatedRoutes />
+            <CookieConsent />
           </Suspense>
         </BrowserRouter>
       </TooltipProvider>

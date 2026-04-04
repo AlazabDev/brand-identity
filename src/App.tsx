@@ -25,6 +25,10 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminLoginPage = lazy(() => import("./pages/AdminLoginPage"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const MaintenanceTrackingPage = lazy(() => import("./pages/MaintenanceTrackingPage"));
+const TeamPage = lazy(() => import("./pages/TeamPage"));
+const ProjectDetailPage = lazy(() => import("./pages/ProjectDetailPage"));
+const PartnersPage = lazy(() => import("./pages/PartnersPage"));
+const CareersPage = lazy(() => import("./pages/CareersPage"));
 
 const queryClient = new QueryClient();
 
@@ -51,6 +55,10 @@ function AnimatedRoutes() {
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/cookies" element={<CookiePolicyPage />} />
         <Route path="/data-deletion" element={<DataDeletionPage />} />
+        <Route path="/team" element={<TeamPage />} />
+        <Route path="/partners" element={<PartnersPage />} />
+        <Route path="/careers" element={<CareersPage />} />
+        <Route path="/projects/:id" element={<ProjectDetailPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/maintenance-tracking" element={<MaintenanceTrackingPage />} />

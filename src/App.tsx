@@ -25,6 +25,10 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminLoginPage = lazy(() => import("./pages/AdminLoginPage"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const MaintenanceTrackingPage = lazy(() => import("./pages/MaintenanceTrackingPage"));
+const TeamPage = lazy(() => import("./pages/TeamPage"));
+const ProjectDetailPage = lazy(() => import("./pages/ProjectDetailPage"));
+const PartnersPage = lazy(() => import("./pages/PartnersPage"));
+const CareersPage = lazy(() => import("./pages/CareersPage"));
 
 const queryClient = new QueryClient();
 

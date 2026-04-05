@@ -15,6 +15,9 @@ const FloatingButtons = () => {
 
   return (
     <>
+      {/* AI Chatbot */}
+      <AIChatbot />
+
       {/* WhatsApp Chat Widget */}
       <WhatsAppChat />
 

@@ -78,10 +78,7 @@ const App = () => (
           <ScrollToTop />
           <Suspense fallback={<LoadingScreen />}>
             <AnimatedRoutes />
-<<<<<<< HEAD
-=======
             <CookieConsent />
->>>>>>> origin/lovable-sync-1775275767
           </Suspense>
         </BrowserRouter>
       </TooltipProvider>

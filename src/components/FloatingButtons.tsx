@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { ArrowUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import WhatsAppChat from "./WhatsAppChat";
+import { AIChatbot } from "./AIChatbot";
 
 const FloatingButtons = () => {
   const [showTop, setShowTop] = useState(false);

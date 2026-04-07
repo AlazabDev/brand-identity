@@ -194,7 +194,7 @@ const AIChatbot = () => {
             </div>
 
             {/* Input */}
-            <div className="p-3 border-t border-border">
+            <div className="relative p-3 border-t border-border">
               <form
                 onSubmit={(e) => { e.preventDefault(); handleSend(); }}
                 className="flex items-center gap-1.5"

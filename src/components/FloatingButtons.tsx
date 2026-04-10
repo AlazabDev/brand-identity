@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { ArrowUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import WhatsAppChat from "./WhatsAppChat";
 import { AIChatbot } from "./AIChatbot";
 
 const FloatingButtons = () => {
@@ -17,9 +16,6 @@ const FloatingButtons = () => {
     <>
       {/* AI Chatbot */}
       <AIChatbot />
-
-      {/* WhatsApp Chat Widget */}
-      <WhatsAppChat />
 
       {/* Scroll to top */}
       <AnimatePresence>

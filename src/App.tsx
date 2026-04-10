@@ -29,6 +29,7 @@ const TeamPage = lazy(() => import("./pages/TeamPage"));
 const ProjectDetailPage = lazy(() => import("./pages/ProjectDetailPage"));
 const PartnersPage = lazy(() => import("./pages/PartnersPage"));
 const CareersPage = lazy(() => import("./pages/CareersPage"));
+const WebhookDashboardPage = lazy(() => import("./pages/WebhookDashboardPage"));
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,7 @@ function AnimatedRoutes() {
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/maintenance-tracking" element={<MaintenanceTrackingPage />} />
+        <Route path="/admin/webhooks" element={<WebhookDashboardPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>

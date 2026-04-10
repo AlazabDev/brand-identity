@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import PageTransition from "@/components/PageTransition";
 import Header from "@/components/Header";
-import { Footer } from "@/components/Footer";
+import Footer from "@/components/Footer";
 import {
   RefreshCw, Activity, Webhook, MessageCircle, Globe, Shield,
   CheckCircle2, XCircle, Clock, ExternalLink, Copy, Eye, ChevronDown,

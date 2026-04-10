@@ -128,6 +128,42 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_connections: {
+        Row: {
+          access_token: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          metadata: Json | null
+          platform: string
+          refresh_token: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          platform: string
+          refresh_token?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          platform?: string
+          refresh_token?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       projects: {
         Row: {
           area: string | null
@@ -245,6 +281,81 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      webhook_logs: {
+        Row: {
+          created_at: string
+          endpoint: string
+          event_type: string
+          id: string
+          payload: Json | null
+          platform: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          event_type: string
+          id?: string
+          payload?: Json | null
+          platform?: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          platform?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      whatsapp_messages: {
+        Row: {
+          content: string | null
+          created_at: string
+          direction: string
+          from_name: string | null
+          from_number: string | null
+          id: string
+          media_url: string | null
+          message_id: string | null
+          message_type: string
+          status: string
+          timestamp: string
+          to_number: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          direction?: string
+          from_name?: string | null
+          from_number?: string | null
+          id?: string
+          media_url?: string | null
+          message_id?: string | null
+          message_type?: string
+          status?: string
+          timestamp?: string
+          to_number?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          direction?: string
+          from_name?: string | null
+          from_number?: string | null
+          id?: string
+          media_url?: string | null
+          message_id?: string | null
+          message_type?: string
+          status?: string
+          timestamp?: string
+          to_number?: string | null
         }
         Relationships: []
       }

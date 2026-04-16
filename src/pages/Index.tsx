@@ -2,10 +2,14 @@ import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import ServicesSection from "@/components/ServicesSection";
 import MallExpertise from "@/components/MallExpertise";
+import { ClientLogos } from "@/components/ClientLogos";
 import AbuAufShowcase from "@/components/AbuAufShowcase";
+import { BeforeAfter } from "@/components/BeforeAfter";
 import ProjectsGallery from "@/components/ProjectsGallery";
 import WorkSteps from "@/components/WorkSteps";
+import { TrustIndicators } from "@/components/TrustIndicators";
 import Testimonials from "@/components/Testimonials";
+import { FAQPreview } from "@/components/FAQPreview";
 import BlogPreview from "@/components/BlogPreview";
 import CTABand from "@/components/CTABand";
 import Footer from "@/components/Footer";
@@ -25,12 +29,16 @@ const Index = () => {
         <Header />
         <main id="main-content">
           <HeroSection />
+          <ClientLogos />
           <ServicesSection />
           <MallExpertise />
           <AbuAufShowcase />
+          <BeforeAfter />
           <ProjectsGallery />
           <WorkSteps />
+          <TrustIndicators />
           <Testimonials />
+          <FAQPreview />
           <BlogPreview />
           <CTABand />
         </main>

@@ -8,7 +8,9 @@ import PageMeta from "@/components/PageMeta";
 import PageTransition from "@/components/PageTransition";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { architectureProjects } from "@/data/architectureProjects";
+import { getAllProjects } from "@/lib/architectureStore";
+
+const architectureProjects = getAllProjects();
 
 export const ArchitectureProjectsPage = () => {
   return (

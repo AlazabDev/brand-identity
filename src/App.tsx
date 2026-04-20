@@ -33,6 +33,7 @@ const WebhookDashboardPage = lazy(() => import("./pages/WebhookDashboardPage"));
 const WorksPage = lazy(() => import("./pages/works"));
 const ArchitectureProjectsPage = lazy(() => import("./pages/ArchitectureProjectsPage"));
 const ArchitectureProjectDetailPage = lazy(() => import("./pages/ArchitectureProjectDetailPage"));
+const AdminArchitecturePage = lazy(() => import("./pages/AdminArchitecturePage"));
 
 const queryClient = new QueryClient();
 
@@ -67,6 +68,7 @@ function AnimatedRoutes() {
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/maintenance-tracking" element={<MaintenanceTrackingPage />} />
         <Route path="/admin/webhooks" element={<WebhookDashboardPage />} />
+        <Route path="/admin/architecture" element={<AdminArchitecturePage />} />
         <Route path="/works" element={<WorksPage />} />
         <Route path="/architecture" element={<ArchitectureProjectsPage />} />
         <Route path="/architecture/:id" element={<ArchitectureProjectDetailPage />} />

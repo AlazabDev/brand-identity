@@ -162,10 +162,19 @@ const AdminDashboard = () => {
           <img src={brandLogo} alt="Brand Identity" className="h-8" />
           <h1 className="font-display font-bold text-lg">لوحة الإدارة</h1>
         </div>
-        <Button variant="ghost" onClick={handleLogout} className="text-primary-foreground hover:bg-primary-foreground/10">
-          <LogOut className="w-4 h-4 ml-2" />
-          خروج
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" onClick={() => navigate("/admin/architecture")} className="text-primary-foreground hover:bg-primary-foreground/10">
+            <FolderOpen className="w-4 h-4 ml-2" />
+            المشاريع المعمارية
+          </Button>
+          <Button variant="ghost" onClick={() => navigate("/admin/webhooks")} className="text-primary-foreground hover:bg-primary-foreground/10">
+            الـ Webhooks
+          </Button>
+          <Button variant="ghost" onClick={handleLogout} className="text-primary-foreground hover:bg-primary-foreground/10">
+            <LogOut className="w-4 h-4 ml-2" />
+            خروج
+          </Button>
+        </div>
       </header>
 
       <div className="container mx-auto p-4 md:p-6 max-w-7xl">

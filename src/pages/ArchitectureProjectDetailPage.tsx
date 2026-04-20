@@ -10,7 +10,7 @@ import PageTransition from "@/components/PageTransition";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { getArchitectureProject } from "@/data/architectureProjects";
+import { getProjectById as getArchitectureProject } from "@/lib/architectureStore";
 
 export const ArchitectureProjectDetailPage = () => {
   const { id } = useParams<{ id: string }>();

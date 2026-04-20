@@ -49,19 +49,23 @@ const Header = () => {
 
         {/* Desktop Nav */}
         <nav aria-label="التنقل الرئيسي" className="hidden lg:flex items-center gap-8">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              to={link.href}
-              className={`text-sm font-medium font-body transition-colors hover:text-accent ${
-                location.pathname === link.href
-                  ? "text-accent"
-                  : "text-foreground"
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const isActive = location.pathname === link.href;
+            return (
+              <Link
+                key={link.href}
+                to={link.href}
+                className={`relative text-sm font-medium font-body transition-colors hover:text-primary active:text-accent ${
+                  isActive ? "text-primary" : "text-foreground"
+                }`}
+              >
+                {link.label}
+                {isActive && (
+                  <span className="absolute -bottom-1 right-0 left-0 h-0.5 bg-primary rounded-full" />
+                )}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* CTA Button */}
@@ -100,9 +104,9 @@ const Header = () => {
                 <Link
                   key={link.href}
                   to={link.href}
-                  className={`px-4 py-3 rounded-lg text-sm font-medium font-body transition-colors ${
+                  className={`px-4 py-3 rounded-lg text-sm font-medium font-body transition-colors active:bg-accent/20 active:text-accent ${
                     location.pathname === link.href
-                      ? "bg-accent/10 text-accent"
+                      ? "bg-primary/10 text-primary"
                       : "text-foreground hover:bg-muted"
                   }`}
                 >

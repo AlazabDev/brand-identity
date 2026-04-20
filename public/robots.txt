@@ -16,5 +16,6 @@ User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /admin/login
+Disallow: /admin/webhooks
 
 Sitemap: https://brand-identity.alazab.com/sitemap.xml

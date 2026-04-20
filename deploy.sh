@@ -65,7 +65,7 @@ sudo tee "$NGINX_CONF" > /dev/null << 'NGINX_EOF'
 server {
     listen 80;
     listen [::]:80;
-    server_name alazab.com www.alazab.com;
+    server_name brand-identity.alazab.com;
     return 301 https://$host$request_uri;
 }
 
@@ -73,7 +73,7 @@ server {
 server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
-    server_name b.alazab.com;
+    server_name brand-identity.alazab.com;
 
     root /var/www/core/brand-identity;
     index index.html;
@@ -89,8 +89,9 @@ server {
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-XSS-Protection "1; mode=block" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "camera=(), microphone=(self), geolocation=()" always;
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
-    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://connect.facebook.net https://graph.facebook.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://graph.facebook.com https://connect.facebook.net; frame-src https://www.facebook.com https://web.facebook.com;" always;
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://connect.facebook.net https://graph.facebook.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://graph.facebook.com https://connect.facebook.net https://api.elevenlabs.io; frame-src 'self' https://www.facebook.com https://web.facebook.com https://3d.magicplan.app;" always;
 
     # Gzip
     gzip on;
@@ -99,16 +100,25 @@ server {
     gzip_comp_level 6;
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript image/svg+xml application/wasm;
 
+    # Brotli (if module available)
+    # brotli on; brotli_comp_level 6; brotli_types text/plain text/css application/json application/javascript image/svg+xml;
+
     # Static assets — immutable cache
     location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|webp|avif|wasm)$ {
         expires 1y;
         add_header Cache-Control "public, immutable";
+        access_log off;
         try_files $uri =404;
     }
+
+    # sitemap & robots
+    location = /sitemap.xml { add_header Cache-Control "public, max-age=3600"; }
+    location = /robots.txt  { add_header Cache-Control "public, max-age=3600"; }
 
     # SPA fallback
     location / {
         try_files $uri $uri/ /index.html;
+        add_header Cache-Control "no-cache, must-revalidate";
     }
 
     # Supabase Edge Functions proxy
@@ -120,6 +130,23 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_read_timeout 60s;
+    }
+
+    # Auth & API & Webhook routes (proxy to Supabase Edge Functions)
+    location /auth/v1/callback {
+        proxy_pass https://drtsurlnlxxhwimbkfse.supabase.co/functions/v1/auth-callback;
+        proxy_set_header Host drtsurlnlxxhwimbkfse.supabase.co;
+        proxy_ssl_server_name on;
+    }
+    location /api/v1/ {
+        proxy_pass https://drtsurlnlxxhwimbkfse.supabase.co/functions/v1/api-handler/;
+        proxy_set_header Host drtsurlnlxxhwimbkfse.supabase.co;
+        proxy_ssl_server_name on;
+    }
+    location /api/webhook {
+        proxy_pass https://drtsurlnlxxhwimbkfse.supabase.co/functions/v1/whatsapp-webhook;
+        proxy_set_header Host drtsurlnlxxhwimbkfse.supabase.co;
+        proxy_ssl_server_name on;
     }
 
     # Block dotfiles

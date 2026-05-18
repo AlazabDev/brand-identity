@@ -124,7 +124,7 @@ export const AdminArchitecturePage = () => {
     }).filter((g) => g.src);
 
     const files: ProjectFile[] = splitLines(filesText)
-      .map((line, i) => {
+      .map((line, i): ProjectFile | null => {
         const [typeRaw, url, name, size] = line.split("|").map((s) => s.trim());
         const type = (typeRaw as ProjectFileType) || "image";
         if (!VALID_TYPES.includes(type) || !url) return null;
@@ -133,7 +133,7 @@ export const AdminArchitecturePage = () => {
           name: name || url.split("/").pop() || "ملف",
           type,
           url,
-          size: size || undefined,
+          ...(size ? { size } : {}),
         };
       })
       .filter((f): f is ProjectFile => f !== null);

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { getProjectById as getArchitectureProject } from "@/lib/architectureStore";
+import { ProjectFilesViewer } from "@/components/architecture/ProjectFilesViewer";
 
 export const ArchitectureProjectDetailPage = () => {
   const { id } = useParams<{ id: string }>();

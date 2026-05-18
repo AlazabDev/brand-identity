@@ -93,6 +93,7 @@ export const AdminArchitecturePage = () => {
     setMaterialsText("");
     setNearbyText("");
     setGalleryText("");
+    setFilesText("");
     setIsNew(true);
     setDialogOpen(true);
   };
@@ -102,6 +103,11 @@ export const AdminArchitecturePage = () => {
     setMaterialsText(p.materials.join("\n"));
     setNearbyText(p.nearby.join("\n"));
     setGalleryText(p.gallery.map((g) => `${g.src} | ${g.caption}`).join("\n"));
+    setFilesText(
+      (p.files ?? [])
+        .map((f) => `${f.type} | ${f.url} | ${f.name}${f.size ? ` | ${f.size}` : ""}`)
+        .join("\n"),
+    );
     setIsNew(false);
     setDialogOpen(true);
   };
@@ -117,6 +123,21 @@ export const AdminArchitecturePage = () => {
       return { src, caption };
     }).filter((g) => g.src);
 
+    const files: ProjectFile[] = splitLines(filesText)
+      .map((line, i) => {
+        const [typeRaw, url, name, size] = line.split("|").map((s) => s.trim());
+        const type = (typeRaw as ProjectFileType) || "image";
+        if (!VALID_TYPES.includes(type) || !url) return null;
+        return {
+          id: `${id}-${type}-${i + 1}`,
+          name: name || url.split("/").pop() || "ملف",
+          type,
+          url,
+          size: size || undefined,
+        };
+      })
+      .filter((f): f is ProjectFile => f !== null);
+
     const final: ArchitectureProject = {
       ...editing,
       id,
@@ -125,6 +146,7 @@ export const AdminArchitecturePage = () => {
       materials: splitLines(materialsText),
       nearby: splitLines(nearbyText),
       gallery,
+      files,
     };
 
     setProjects(upsertProject(final));

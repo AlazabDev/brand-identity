@@ -1,3 +1,14 @@
+export type ProjectFileType = "image" | "pdf" | "cad" | "model3d" | "xlsx" | "video";
+
+export type ProjectFile = {
+  id: string;
+  name: string;
+  type: ProjectFileType;
+  url: string;
+  thumbnail?: string;
+  size?: string;
+};
+
 export type ArchitectureProject = {
   id: string;
   title: string;
@@ -17,12 +28,25 @@ export type ArchitectureProject = {
   coverImage: string;
   gallery: { src: string; caption: string }[];
   modelEmbedUrl: string;
+  files?: ProjectFile[];
 };
 
 const cover = (seed: string) =>
   `https://images.unsplash.com/photo-${seed}?auto=format&fit=crop&w=1200&q=70`;
 
-export const architectureProjects: ArchitectureProject[] = [
+export const DEFAULT_MODEL_EMBED =
+  "https://3d.magicplan.app/#embed/?key=YjAyOTE3MWZmMDMwYzcyN2YzM2Y5MDZkMmU3ODlkN2FmYjZmMzRmMGM4Y2EyYTU2NTk2NDA3YWIwNzIxYWU4OYk7urDJOk1uaD9pw7OE0DEu8b6xKwKWHewZPCmcIFI62ITTOMkztERr%2FqEIu%2FmJ2SNrl%2F7kembCUWKg8Kcqmy708Y8RXVdRIYpAy%2FmQKlcz";
+
+const sampleFiles = (projectId: string): ProjectFile[] => [
+  { id: `${projectId}-img-1`, name: "لوحة الواجهات المعمارية", type: "image", url: cover("1503387762-592deb58ef4e") },
+  { id: `${projectId}-pdf-1`, name: "كراسة شروط المشروع.pdf", type: "pdf", url: "https://www.africau.edu/images/default/sample.pdf", size: "1.2 MB" },
+  { id: `${projectId}-cad-1`, name: "المخطط المعماري.dwg", type: "cad", url: "#", size: "8.4 MB" },
+  { id: `${projectId}-3d-1`, name: "النموذج ثلاثي الأبعاد", type: "model3d", url: DEFAULT_MODEL_EMBED },
+  { id: `${projectId}-xlsx-1`, name: "جدول التشطيبات والكميات.xlsx", type: "xlsx", url: "https://file-examples.com/storage/feaade38c1651bd01984236/2017/02/file_example_XLSX_10.xlsx", size: "24 KB" },
+  { id: `${projectId}-vid-1`, name: "جولة فيديو داخل المشروع", type: "video", url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" },
+];
+
+const seedProjects: ArchitectureProject[] = [
   {
     id: "green-plate-tagamoa",
     title: 'فرع "Green Plate"',
@@ -186,6 +210,12 @@ export const architectureProjects: ArchitectureProject[] = [
       "https://3d.magicplan.app/#embed/?key=ZTg1MWFhYWNiMTgxZDc1NzcyZDA1NDY0YWFiYzlkOGVjYzRiZTFjZWVhNjQ3N2NjMDA1NDBkNjM1YWZmODNiNH9LRX2bE%2BCMtkLYe%2B%2Fmb5NJjybLd%2B9klWq7FVq%2BjoC9DkU5cWpDioAKK0E0%2FXPwFg%3D%3D",
   },
 ];
+
+export const architectureProjects: ArchitectureProject[] = seedProjects.map((p) => ({
+  ...p,
+  modelEmbedUrl: DEFAULT_MODEL_EMBED,
+  files: sampleFiles(p.id),
+}));
 
 export const getArchitectureProject = (id: string) =>
   architectureProjects.find((p) => p.id === id);

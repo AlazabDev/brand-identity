@@ -23,7 +23,9 @@ import {
   getAllProjects, upsertProject, deleteProject as removeProject,
   resetToSeed, slugify,
 } from "@/lib/architectureStore";
-import type { ArchitectureProject } from "@/data/architectureProjects";
+import type { ArchitectureProject, ProjectFile, ProjectFileType } from "@/data/architectureProjects";
+
+const VALID_TYPES: ProjectFileType[] = ["image", "pdf", "cad", "model3d", "xlsx", "video"];
 
 const emptyProject = (): ArchitectureProject => ({
   id: "",
@@ -61,6 +63,7 @@ export const AdminArchitecturePage = () => {
   const [materialsText, setMaterialsText] = useState("");
   const [nearbyText, setNearbyText] = useState("");
   const [galleryText, setGalleryText] = useState("");
+  const [filesText, setFilesText] = useState("");
 
   useEffect(() => {
     const verify = async () => {
@@ -90,6 +93,7 @@ export const AdminArchitecturePage = () => {
     setMaterialsText("");
     setNearbyText("");
     setGalleryText("");
+    setFilesText("");
     setIsNew(true);
     setDialogOpen(true);
   };
@@ -99,6 +103,11 @@ export const AdminArchitecturePage = () => {
     setMaterialsText(p.materials.join("\n"));
     setNearbyText(p.nearby.join("\n"));
     setGalleryText(p.gallery.map((g) => `${g.src} | ${g.caption}`).join("\n"));
+    setFilesText(
+      (p.files ?? [])
+        .map((f) => `${f.type} | ${f.url} | ${f.name}${f.size ? ` | ${f.size}` : ""}`)
+        .join("\n"),
+    );
     setIsNew(false);
     setDialogOpen(true);
   };
@@ -114,6 +123,21 @@ export const AdminArchitecturePage = () => {
       return { src, caption };
     }).filter((g) => g.src);
 
+    const files: ProjectFile[] = splitLines(filesText)
+      .map((line, i): ProjectFile | null => {
+        const [typeRaw, url, name, size] = line.split("|").map((s) => s.trim());
+        const type = (typeRaw as ProjectFileType) || "image";
+        if (!VALID_TYPES.includes(type) || !url) return null;
+        return {
+          id: `${id}-${type}-${i + 1}`,
+          name: name || url.split("/").pop() || "ملف",
+          type,
+          url,
+          ...(size ? { size } : {}),
+        };
+      })
+      .filter((f): f is ProjectFile => f !== null);
+
     const final: ArchitectureProject = {
       ...editing,
       id,
@@ -122,6 +146,7 @@ export const AdminArchitecturePage = () => {
       materials: splitLines(materialsText),
       nearby: splitLines(nearbyText),
       gallery,
+      files,
     };
 
     setProjects(upsertProject(final));
@@ -321,6 +346,19 @@ export const AdminArchitecturePage = () => {
               <Label>الألبوم (سطر لكل صورة بصيغة: URL | التعليق)</Label>
               <Textarea rows={4} value={galleryText} onChange={(e) => setGalleryText(e.target.value)}
                 placeholder="https://...jpg | الواجهة الرئيسية" />
+            </div>
+            <div className="space-y-1 md:col-span-2">
+              <Label>ملفات المشروع (سطر لكل ملف بصيغة: النوع | URL | الاسم | الحجم)</Label>
+              <Textarea
+                rows={5}
+                value={filesText}
+                onChange={(e) => setFilesText(e.target.value)}
+                placeholder={"pdf | https://.../plans.pdf | المخططات التنفيذية | 2.4 MB\nmodel3d | https://3d.magicplan.app/#embed/?key=... | النموذج ثلاثي الأبعاد\ncad | https://.../arch.dwg | المخطط المعماري | 8 MB\nxlsx | https://.../boq.xlsx | جدول الكميات\nvideo | https://.../tour.mp4 | جولة فيديو\nimage | https://.../facade.jpg | الواجهة الرئيسية"}
+                className="font-mono text-xs"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                الأنواع المدعومة: image · pdf · cad · model3d · xlsx · video
+              </p>
             </div>
           </div>
 

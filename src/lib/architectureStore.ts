@@ -1,6 +1,6 @@
 import { architectureProjects as seedProjects, type ArchitectureProject } from "@/data/architectureProjects";
 
-const STORAGE_KEY = "architecture_projects_v1";
+const STORAGE_KEY = "architecture_projects_v2";
 
 const readStorage = (): ArchitectureProject[] | null => {
   try {

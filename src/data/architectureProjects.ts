@@ -46,7 +46,7 @@ const sampleFiles = (projectId: string): ProjectFile[] => [
   { id: `${projectId}-vid-1`, name: "جولة فيديو داخل المشروع", type: "video", url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" },
 ];
 
-export const architectureProjects: ArchitectureProject[] = [
+const seedProjects: ArchitectureProject[] = [
   {
     id: "green-plate-tagamoa",
     title: 'فرع "Green Plate"',
@@ -210,6 +210,12 @@ export const architectureProjects: ArchitectureProject[] = [
       "https://3d.magicplan.app/#embed/?key=ZTg1MWFhYWNiMTgxZDc1NzcyZDA1NDY0YWFiYzlkOGVjYzRiZTFjZWVhNjQ3N2NjMDA1NDBkNjM1YWZmODNiNH9LRX2bE%2BCMtkLYe%2B%2Fmb5NJjybLd%2B9klWq7FVq%2BjoC9DkU5cWpDioAKK0E0%2FXPwFg%3D%3D",
   },
 ];
+
+export const architectureProjects: ArchitectureProject[] = seedProjects.map((p) => ({
+  ...p,
+  modelEmbedUrl: DEFAULT_MODEL_EMBED,
+  files: sampleFiles(p.id),
+}));
 
 export const getArchitectureProject = (id: string) =>
   architectureProjects.find((p) => p.id === id);

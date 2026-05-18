@@ -23,7 +23,9 @@ import {
   getAllProjects, upsertProject, deleteProject as removeProject,
   resetToSeed, slugify,
 } from "@/lib/architectureStore";
-import type { ArchitectureProject } from "@/data/architectureProjects";
+import type { ArchitectureProject, ProjectFile, ProjectFileType } from "@/data/architectureProjects";
+
+const VALID_TYPES: ProjectFileType[] = ["image", "pdf", "cad", "model3d", "xlsx", "video"];
 
 const emptyProject = (): ArchitectureProject => ({
   id: "",
@@ -61,6 +63,7 @@ export const AdminArchitecturePage = () => {
   const [materialsText, setMaterialsText] = useState("");
   const [nearbyText, setNearbyText] = useState("");
   const [galleryText, setGalleryText] = useState("");
+  const [filesText, setFilesText] = useState("");
 
   useEffect(() => {
     const verify = async () => {

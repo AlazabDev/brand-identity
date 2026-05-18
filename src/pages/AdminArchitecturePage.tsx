@@ -347,6 +347,19 @@ export const AdminArchitecturePage = () => {
               <Textarea rows={4} value={galleryText} onChange={(e) => setGalleryText(e.target.value)}
                 placeholder="https://...jpg | الواجهة الرئيسية" />
             </div>
+            <div className="space-y-1 md:col-span-2">
+              <Label>ملفات المشروع (سطر لكل ملف بصيغة: النوع | URL | الاسم | الحجم)</Label>
+              <Textarea
+                rows={5}
+                value={filesText}
+                onChange={(e) => setFilesText(e.target.value)}
+                placeholder={"pdf | https://.../plans.pdf | المخططات التنفيذية | 2.4 MB\nmodel3d | https://3d.magicplan.app/#embed/?key=... | النموذج ثلاثي الأبعاد\ncad | https://.../arch.dwg | المخطط المعماري | 8 MB\nxlsx | https://.../boq.xlsx | جدول الكميات\nvideo | https://.../tour.mp4 | جولة فيديو\nimage | https://.../facade.jpg | الواجهة الرئيسية"}
+                className="font-mono text-xs"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                الأنواع المدعومة: image · pdf · cad · model3d · xlsx · video
+              </p>
+            </div>
           </div>
 
           <DialogFooter>

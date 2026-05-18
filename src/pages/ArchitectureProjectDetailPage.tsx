@@ -145,27 +145,30 @@ export const ArchitectureProjectDetailPage = () => {
             </div>
           </section>
 
-          {/* 3D Model */}
+          {/* Project Files (multi-format viewer) */}
           <section className="section-padding">
-            <div className="container-custom px-4 max-w-5xl">
+            <div className="container-custom px-4 max-w-6xl">
               <h2 className="font-display font-bold text-2xl text-foreground mb-2">
-                النموذج ثلاثي الأبعاد
+                ملفات المشروع
               </h2>
               <p className="text-muted-foreground font-body text-sm mb-6">
-                تجول داخل النموذج المعماري لمشروع {project.title}.
+                استعرض الصور، ملفات الـ PDF والـ CAD، النموذج ثلاثي الأبعاد، جداول الكميات
+                والفيديو — كل ذلك من مكان واحد.
               </p>
-              <div className="relative w-full aspect-[4/3] md:aspect-[16/10] bg-muted rounded-xl overflow-hidden border border-border">
-                <iframe
-                  title={`${project.title} 3D model`}
-                  src={project.modelEmbedUrl}
-                  className="absolute inset-0 w-full h-full"
-                  allowFullScreen
-                />
-                <div className="absolute top-3 left-3 bg-background/90 backdrop-blur px-3 py-1.5 rounded shadow pointer-events-none">
-                  <p className="font-display font-bold text-xs text-foreground">{project.title}</p>
-                  <p className="text-[10px] text-muted-foreground font-body">{project.district}</p>
-                </div>
-              </div>
+              <ProjectFilesViewer
+                files={
+                  project.files && project.files.length > 0
+                    ? project.files
+                    : [
+                        {
+                          id: "default-3d",
+                          name: "النموذج ثلاثي الأبعاد",
+                          type: "model3d",
+                          url: project.modelEmbedUrl,
+                        },
+                      ]
+                }
+              />
             </div>
           </section>
 

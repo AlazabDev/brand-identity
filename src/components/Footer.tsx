@@ -14,10 +14,18 @@ const Footer = () => {
               شركة رائدة في تجهيز المحلات التجارية منذ 2010، نفخر بتنفيذ أكثر من 200 مشروع في كبرى المولات
             </p>
             <div className="flex gap-3">
-              {[Facebook, Instagram, Linkedin, Twitter].map((Icon, i) => (
+              {[
+                { Icon: Facebook, href: "https://www.facebook.com/AlazabBrandIdentity", label: "Facebook" },
+                { Icon: Instagram, href: "https://www.instagram.com/alazab_brandidentity", label: "Instagram" },
+                { Icon: Linkedin, href: "https://www.linkedin.com/company/alazab-group", label: "LinkedIn" },
+                { Icon: Twitter, href: "https://twitter.com/AlazabGroup", label: "Twitter" },
+              ].map(({ Icon, href, label }) => (
                 <a
-                  key={i}
-                  href="#"
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
                   className="w-10 h-10 rounded-lg bg-primary-foreground/10 flex items-center justify-center hover:bg-accent hover:text-accent-foreground transition-colors"
                 >
                   <Icon className="w-4 h-4" />

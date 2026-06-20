@@ -14,10 +14,18 @@ const Footer = () => {
               شركة رائدة في تجهيز المحلات التجارية منذ 2010، نفخر بتنفيذ أكثر من 200 مشروع في كبرى المولات
             </p>
             <div className="flex gap-3">
-              {[Facebook, Instagram, Linkedin, Twitter].map((Icon, i) => (
+              {[
+                { Icon: Facebook, href: "https://www.facebook.com/AlazabBrandIdentity", label: "Facebook" },
+                { Icon: Instagram, href: "https://www.instagram.com/alazab_brandidentity", label: "Instagram" },
+                { Icon: Linkedin, href: "https://www.linkedin.com/company/alazab-group", label: "LinkedIn" },
+                { Icon: Twitter, href: "https://twitter.com/AlazabGroup", label: "Twitter" },
+              ].map(({ Icon, href, label }) => (
                 <a
-                  key={i}
-                  href="#"
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
                   className="w-10 h-10 rounded-lg bg-primary-foreground/10 flex items-center justify-center hover:bg-accent hover:text-accent-foreground transition-colors"
                 >
                   <Icon className="w-4 h-4" />
@@ -84,7 +92,7 @@ const Footer = () => {
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-accent mt-0.5 shrink-0" />
-                <span className="text-primary-foreground/70 text-sm font-body">الحي التجاري - مدينة الرياض</span>
+                <span className="text-primary-foreground/70 text-sm font-body">القاهرة الجديدة - جمهورية مصر العربية</span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-accent shrink-0" />

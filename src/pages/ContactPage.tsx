@@ -5,40 +5,75 @@ import FloatingButtons from "@/components/FloatingButtons";
 import PageMeta from "@/components/PageMeta";
 import PageTransition from "@/components/PageTransition";
 import { motion } from "framer-motion";
-import { Phone, Mail, MapPin, Clock, Send, Loader2 } from "lucide-react";
+import { Phone, Mail, MapPin, Clock, Send, Loader2, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { contactSchema, firstZodError } from "@/lib/validation";
+
+interface ContactForm {
+  name: string;
+  email: string;
+  phone: string;
+  activity: string;
+  mall: string;
+  area: string;
+  message: string;
+}
+
+const initialForm: ContactForm = {
+  name: "",
+  email: "",
+  phone: "",
+  activity: "",
+  mall: "",
+  area: "",
+  message: "",
+};
+
+const buildWhatsAppUrl = (data: ContactForm): string => {
+  const text = `📩 رسالة جديدة من الموقع\n\n👤 الاسم: ${data.name}\n📧 البريد: ${data.email || "—"}\n📱 الجوال: ${data.phone || "—"}\n🏪 النشاط: ${data.activity || "—"}\n🏬 المول: ${data.mall || "—"}\n📐 المساحة: ${data.area || "—"}\n💬 الرسالة: ${data.message || "—"}`;
+  return `https://wa.me/201004006620?text=${encodeURIComponent(text)}`;
+};
 
 const ContactPage = () => {
-  const [form, setForm] = useState({
-    name: "", email: "", phone: "", activity: "", mall: "", area: "", message: "",
-  });
+  const [form, setForm] = useState<ContactForm>(initialForm);
   const [submitting, setSubmitting] = useState(false);
-
-  const sendWhatsAppNotification = (data: typeof form) => {
-    const text = `📩 رسالة جديدة من الموقع\n\n👤 الاسم: ${data.name}\n📧 البريد: ${data.email || "—"}\n📱 الجوال: ${data.phone || "—"}\n🏪 النشاط: ${data.activity || "—"}\n🏬 المول: ${data.mall || "—"}\n📐 المساحة: ${data.area || "—"}\n💬 الرسالة: ${data.message || "—"}`;
-    window.open(`https://wa.me/201004006620?text=${encodeURIComponent(text)}`, "_blank");
-  };
+  const [lastSubmittedAt, setLastSubmittedAt] = useState<number>(0);
+  const [whatsAppUrl, setWhatsAppUrl] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
+    // Prevent rapid double-submits (3s throttle)
+    if (Date.now() - lastSubmittedAt < 3000) {
+      toast.warning("يرجى الانتظار قليلاً قبل إعادة الإرسال");
+      return;
+    }
+
+    const parsed = contactSchema.safeParse(form);
+    if (!parsed.success) {
+      toast.error(firstZodError(parsed.error));
+      return;
+    }
+
     setSubmitting(true);
     try {
       const { error } = await supabase.from("contact_messages").insert({
-        name: form.name,
-        email: form.email || null,
-        phone: form.phone || null,
-        business_type: form.activity || null,
-        mall: form.mall || null,
-        area: form.area || null,
-        message: form.message || null,
+        name: parsed.data.name,
+        email: parsed.data.email || null,
+        phone: parsed.data.phone || null,
+        business_type: parsed.data.activity || null,
+        mall: parsed.data.mall || null,
+        area: parsed.data.area || null,
+        message: parsed.data.message || null,
       });
 
       if (error) throw error;
 
       toast.success("تم إرسال رسالتك بنجاح! سنتواصل معك قريباً");
-      sendWhatsAppNotification(form);
-      setForm({ name: "", email: "", phone: "", activity: "", mall: "", area: "", message: "" });
+      setWhatsAppUrl(buildWhatsAppUrl(form));
+      setLastSubmittedAt(Date.now());
+      setForm(initialForm);
     } catch (err) {
       console.error("Error submitting contact:", err);
       toast.error("حدث خطأ أثناء الإرسال. حاول مرة أخرى");
@@ -50,7 +85,7 @@ const ContactPage = () => {
   return (
     <PageTransition>
       <PageMeta
-        title="اتصل بنا"
+        title="اتصل بنا | Brand Identity"
         description="تواصل مع Brand Identity للحصول على استشارة مجانية لتجهيز محلك التجاري داخل المول. هاتف: +201004006620"
         canonical="https://brand-identity.alazab.com/contact"
       />
@@ -72,7 +107,7 @@ const ContactPage = () => {
                 {[
                   { icon: Phone, label: "الهاتف", value: "+20 100 400 6620", href: "tel:+201004006620" },
                   { icon: Mail, label: "البريد", value: "brand.identity@alazab.com", href: "mailto:brand.identity@alazab.com" },
-                  { icon: MapPin, label: "العنوان", value: "الحي التجاري - مدينة الرياض" },
+                  { icon: MapPin, label: "العنوان", value: "القاهرة الجديدة - جمهورية مصر العربية" },
                   { icon: Clock, label: "ساعات العمل", value: "السبت - الخميس: 9 ص - 6 م" },
                 ].map((item, i) => (
                   <motion.div
@@ -102,13 +137,14 @@ const ContactPage = () => {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   onSubmit={handleSubmit}
+                  noValidate
                   className="card-elevated p-8 space-y-5"
                 >
                   <h2 className="font-display font-bold text-2xl text-foreground mb-2">أرسل لنا رسالة</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <input type="text" placeholder="الاسم الكامل" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" />
-                    <input type="email" placeholder="البريد الإلكتروني" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" />
-                    <input type="tel" placeholder="رقم الجوال" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" />
+                    <input type="text" placeholder="الاسم الكامل *" required maxLength={100} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" />
+                    <input type="email" placeholder="البريد الإلكتروني" maxLength={255} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" />
+                    <input type="tel" placeholder="رقم الجوال (01xxxxxxxxx)" maxLength={20} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" />
                     <select value={form.activity} onChange={(e) => setForm({ ...form, activity: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50">
                       <option value="">نوع النشاط</option>
                       <option>ملابس وأزياء</option>
@@ -117,13 +153,26 @@ const ContactPage = () => {
                       <option>إلكترونيات</option>
                       <option>أخرى</option>
                     </select>
-                    <input type="text" placeholder="المول المطلوب" value={form.mall} onChange={(e) => setForm({ ...form, mall: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" />
-                    <input type="text" placeholder="المساحة (م²)" value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" />
+                    <input type="text" placeholder="المول المطلوب" maxLength={100} value={form.mall} onChange={(e) => setForm({ ...form, mall: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" />
+                    <input type="text" placeholder="المساحة (م²)" maxLength={20} value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" />
                   </div>
-                  <textarea placeholder="رسالتك..." rows={4} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 resize-none" />
-                  <button type="submit" disabled={submitting} className="inline-flex items-center gap-2 px-8 py-3 rounded-lg bg-accent text-accent-foreground font-display font-bold hover:-translate-y-0.5 active:scale-95 transition-all disabled:opacity-50">
-                    {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />} إرسال الرسالة
-                  </button>
+                  <textarea placeholder="رسالتك..." rows={4} maxLength={2000} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 resize-none" />
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button type="submit" disabled={submitting} className="inline-flex items-center gap-2 px-8 py-3 rounded-lg bg-accent text-accent-foreground font-display font-bold hover:-translate-y-0.5 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                      {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />} إرسال الرسالة
+                    </button>
+                    {whatsAppUrl && (
+                      <a
+                        href={whatsAppUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-accent text-accent font-display font-bold hover:bg-accent/10 transition-colors"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        إرسال نسخة عبر واتساب
+                      </a>
+                    )}
+                  </div>
                 </motion.form>
 
                 <motion.div
@@ -134,7 +183,7 @@ const ContactPage = () => {
                   style={{ boxShadow: "var(--shadow-card)" }}
                 >
                   <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2708.771324907652!2d31.278762925568998!3d29.987812974952135!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1458396627ebf27d%3A0x15bc48a54f2e9a92!2z2KfZhNi52LLYqCDZhNmE2YXZgtin2YjZhNin2Kog2YjYp9mE2KrZiNix2YrYr9in2Ko!5e1!3m2!1sar!2seg!4v1773443057660!5m2!1sar!2seg"
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2708.771324907652!2d31.278762925568998!3d29.987812974952135!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1458396627ebf27d%3A0x15bc48a54f2e9a92!2z2KfZhNi52LLYqCDZhNmF2YLYp9mI2YTYp9iqINmI2KfZhNiq2YjYsdmK2K_Yp9iq!5e1!3m2!1sar!2seg!4v1773443057660!5m2!1sar!2seg"
                     width="100%"
                     height="100%"
                     style={{ border: 0, minHeight: "400px" }}
@@ -155,4 +204,5 @@ const ContactPage = () => {
   );
 };
 
+export { ContactPage };
 export default ContactPage;

@@ -201,3 +201,56 @@ async function exchangeCodeForToken(
     metadata: { scope: data.scope, token_type: data.token_type },
   };
 }
+
+// --- Helpers ---------------------------------------------------------------
+
+const b64urlEncode = (bytes: Uint8Array): string =>
+  btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+
+const b64urlDecode = (s: string): Uint8Array => {
+  const pad = s.length % 4 === 0 ? "" : "=".repeat(4 - (s.length % 4));
+  const b64 = s.replace(/-/g, "+").replace(/_/g, "/") + pad;
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+};
+
+async function hmacSign(payload: string, secret: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
+  return b64urlEncode(new Uint8Array(sig));
+}
+
+async function verifySignedState(state: string | null, platform: string, secret: string): Promise<boolean> {
+  if (!state) return false;
+  const parts = state.split(".");
+  if (parts.length !== 3) return false;
+  const [nonce, expiryStr, sig] = parts;
+  const expiry = Number(expiryStr);
+  if (!Number.isFinite(expiry) || Date.now() > expiry) return false;
+  const expected = await hmacSign(`${nonce}.${expiryStr}.${platform}`, secret);
+  // constant-time-ish compare
+  if (expected.length !== sig.length) return false;
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ sig.charCodeAt(i);
+  return diff === 0;
+}
+
+async function deriveAesKey(secret: string): Promise<CryptoKey> {
+  const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(secret));
+  return crypto.subtle.importKey("raw", hash, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
+}
+
+async function encryptString(plaintext: string, secret: string): Promise<string> {
+  const key = await deriveAesKey(secret);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(
+    await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(plaintext))
+  );
+  return `enc:v1:${b64urlEncode(iv)}:${b64urlEncode(ct)}`;
+}
+

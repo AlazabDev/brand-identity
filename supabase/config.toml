@@ -2,3 +2,9 @@ project_id = "drtsurlnlxxhwimbkfse"
 
 [functions.whatsapp]
 verify_jwt = false
+
+[functions.auth-callback]
+verify_jwt = false
+
+[functions.oauth-init]
+verify_jwt = false

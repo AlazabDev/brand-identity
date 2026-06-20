@@ -102,12 +102,39 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // Require authenticated user (JWT) — prevents anonymous abuse
+    const authHeader = req.headers.get("Authorization") || "";
+    const jwt = authHeader.replace(/^Bearer\s+/i, "");
+    if (!jwt) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const supabaseUrlForAuth = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const authClient = createClient(supabaseUrlForAuth, anonKey, {
+      global: { headers: { Authorization: `Bearer ${jwt}` } },
+    });
+    const { data: userData, error: userErr } = await authClient.auth.getUser(jwt);
+    if (userErr || !userData?.user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const WHATSAPP_ACCESS_TOKEN = Deno.env.get("WHATSAPP_ACCESS_TOKEN");
     const WHATSAPP_PHONE_NUMBER_ID = (Deno.env.get("WHATSAPP_PHONE_NUMBER_ID") || "").trim();
+    const WHATSAPP_BUSINESS_PHONE = normalizePhone(Deno.env.get("WHATSAPP_BUSINESS_PHONE") || "");
 
     if (!WHATSAPP_ACCESS_TOKEN) throw new Error("WHATSAPP_ACCESS_TOKEN not configured");
     if (!WHATSAPP_PHONE_NUMBER_ID) throw new Error("WHATSAPP_PHONE_NUMBER_ID not configured");
     assertPhoneNumberId(WHATSAPP_PHONE_NUMBER_ID);
+
+    const enforceRecipient = (to: string) => {
+      if (WHATSAPP_BUSINESS_PHONE && to !== WHATSAPP_BUSINESS_PHONE) {
+        throw new Error("Recipient is not allowed");
+      }
+    };
 
     const contentType = req.headers.get("content-type") || "";
 
@@ -121,6 +148,7 @@ serve(async (req) => {
 
       if (!file) throw new Error("No file provided");
       if (!to) throw new Error("Recipient phone number is required");
+      enforceRecipient(to);
 
       const timestamp = Date.now();
       const safeFileName = `${timestamp}_${fileName}`;
@@ -183,6 +211,8 @@ serve(async (req) => {
     if (action === "send") {
       if (!recipientPhone) throw new Error("Recipient phone number is required");
       if (!message || !message.toString().trim()) throw new Error("Message is required");
+      if (message.toString().length > 4096) throw new Error("Message too long");
+      enforceRecipient(recipientPhone);
 
       const res = await fetch(`${GRAPH_API}/${WHATSAPP_PHONE_NUMBER_ID}/messages`, {
         method: "POST",

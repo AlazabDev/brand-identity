@@ -73,15 +73,22 @@ serve(async (req) => {
     // Exchange code for token based on platform
     const tokenResult = await exchangeCodeForToken(platform, code, state);
 
-    // Store token securely
+    // Store token securely (encrypted at application layer)
     if (tokenResult.success) {
+      const encKey = Deno.env.get("TOKEN_ENCRYPTION_KEY");
+      const accessTokenStored = encKey && tokenResult.accessToken
+        ? await encryptString(tokenResult.accessToken, encKey)
+        : tokenResult.accessToken;
+      const refreshTokenStored = encKey && tokenResult.refreshToken
+        ? await encryptString(tokenResult.refreshToken, encKey)
+        : tokenResult.refreshToken || null;
       await supabase.from("platform_connections").upsert(
         {
           platform,
-          access_token: tokenResult.accessToken,
-          refresh_token: tokenResult.refreshToken || null,
+          access_token: accessTokenStored,
+          refresh_token: refreshTokenStored,
           expires_at: tokenResult.expiresAt || null,
-          metadata: tokenResult.metadata || {},
+          metadata: { ...(tokenResult.metadata || {}), encrypted: !!encKey },
           status: "active",
           updated_at: new Date().toISOString(),
         },

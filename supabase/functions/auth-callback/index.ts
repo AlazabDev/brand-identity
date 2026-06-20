@@ -24,14 +24,14 @@ serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // Log the callback event
+    // Log the callback event (without sensitive values)
     await supabase.from("webhook_logs").insert({
       endpoint: "auth-callback",
       platform,
       event_type: error ? "auth_error" : "auth_callback",
       payload: {
         code: code ? "***received***" : null,
-        state,
+        state_present: !!state,
         platform,
         error,
         error_description: errorDescription,
@@ -41,27 +41,34 @@ serve(async (req) => {
 
     if (error) {
       return new Response(
-        JSON.stringify({
-          success: false,
-          error,
-          description: errorDescription,
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        JSON.stringify({ success: false, error, description: errorDescription }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     if (!code) {
       return new Response(
         JSON.stringify({ success: false, error: "No authorization code provided" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // CSRF protection: validate signed `state` (format: <nonceB64>.<expiryMs>.<hmacB64>)
+    const stateSecret = Deno.env.get("OAUTH_STATE_SECRET");
+    if (!stateSecret) {
+      return new Response(
+        JSON.stringify({ success: false, error: "OAUTH_STATE_SECRET not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const stateValid = await verifySignedState(state, platform, stateSecret);
+    if (!stateValid) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid or expired state (possible CSRF)" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
 
     // Exchange code for token based on platform
     const tokenResult = await exchangeCodeForToken(platform, code, state);

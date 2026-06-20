@@ -75,19 +75,33 @@ const CareersPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!applyingFor) return;
+    if (!applyingFor || submitting) return;
+
+    if (form.fullName.trim().length < 2) {
+      toast.error("الاسم يجب أن يكون حرفين على الأقل");
+      return;
+    }
+    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      toast.error("بريد إلكتروني غير صالح");
+      return;
+    }
+    if (!form.email && !form.phone) {
+      toast.error("يرجى إدخال بريد إلكتروني أو رقم هاتف للتواصل");
+      return;
+    }
 
     setSubmitting(true);
     const { error } = await supabase.from("job_applications").insert({
-      full_name: form.fullName,
-      email: form.email || null,
-      phone: form.phone || null,
+      full_name: form.fullName.trim(),
+      email: form.email.trim() || null,
+      phone: form.phone.trim() || null,
       position: applyingFor,
-      experience_years: form.experience || null,
-      message: form.message || null,
+      experience_years: form.experience.trim() || null,
+      message: form.message.trim() || null,
     });
 
     if (error) {
+      console.error("Error submitting application:", error);
       toast.error("حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.");
     } else {
       toast.success("تم إرسال طلبك بنجاح! سنتواصل معك قريبًا.");
@@ -214,6 +228,7 @@ const CareersPage = () => {
                       <input
                         type="text"
                         required
+                        maxLength={100}
                         value={form.fullName}
                         onChange={(e) => setForm({ ...form, fullName: e.target.value })}
                         className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent"

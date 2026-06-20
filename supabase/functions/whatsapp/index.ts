@@ -211,6 +211,8 @@ serve(async (req) => {
     if (action === "send") {
       if (!recipientPhone) throw new Error("Recipient phone number is required");
       if (!message || !message.toString().trim()) throw new Error("Message is required");
+      if (message.toString().length > 4096) throw new Error("Message too long");
+      enforceRecipient(recipientPhone);
 
       const res = await fetch(`${GRAPH_API}/${WHATSAPP_PHONE_NUMBER_ID}/messages`, {
         method: "POST",

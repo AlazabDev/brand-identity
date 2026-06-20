@@ -148,6 +148,7 @@ serve(async (req) => {
 
       if (!file) throw new Error("No file provided");
       if (!to) throw new Error("Recipient phone number is required");
+      enforceRecipient(to);
 
       const timestamp = Date.now();
       const safeFileName = `${timestamp}_${fileName}`;

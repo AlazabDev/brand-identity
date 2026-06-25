@@ -22,11 +22,17 @@ serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // API key validation
+    // API key validation — ALWAYS required
     const apiKey = req.headers.get("x-api-key") || url.searchParams.get("api_key");
     const validApiKey = Deno.env.get("CUSTOM_API_KEY");
 
-    if (validApiKey && apiKey !== validApiKey) {
+    if (!validApiKey) {
+      return new Response(
+        JSON.stringify({ error: "Server misconfiguration: CUSTOM_API_KEY not set" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    if (apiKey !== validApiKey) {
       return new Response(
         JSON.stringify({ error: "Unauthorized: Invalid API key" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }

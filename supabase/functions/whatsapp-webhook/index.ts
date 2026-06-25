@@ -58,7 +58,39 @@ serve(async (req) => {
   // Handle incoming webhook events (POST)
   if (req.method === "POST") {
     try {
-      const body = await req.json();
+      // Verify Meta X-Hub-Signature-256 HMAC to prevent spoofed events
+      const appSecret = Deno.env.get("WHATSAPP_APP_SECRET");
+      const signatureHeader = req.headers.get("x-hub-signature-256") ?? "";
+      const rawBody = await req.text();
+
+      if (!appSecret) {
+        await supabase.from("webhook_logs").insert({
+          endpoint: "whatsapp-webhook",
+          platform: "whatsapp",
+          event_type: "signature_misconfigured",
+          payload: { reason: "WHATSAPP_APP_SECRET not set" },
+          status: "error",
+        });
+        return new Response("Server misconfiguration", { status: 500 });
+      }
+
+      const expectedHex = await computeHmacSha256Hex(appSecret, rawBody);
+      const providedHex = signatureHeader.startsWith("sha256=")
+        ? signatureHeader.slice("sha256=".length)
+        : "";
+
+      if (!providedHex || !timingSafeEqualHex(providedHex, expectedHex)) {
+        await supabase.from("webhook_logs").insert({
+          endpoint: "whatsapp-webhook",
+          platform: "whatsapp",
+          event_type: "signature_invalid",
+          payload: { has_header: Boolean(signatureHeader) },
+          status: "error",
+        });
+        return new Response("Invalid signature", { status: 401 });
+      }
+
+      const body = JSON.parse(rawBody);
 
       // Log raw webhook
       await supabase.from("webhook_logs").insert({
@@ -239,4 +271,26 @@ async function sendAutoReply(
   } catch (err) {
     console.error("Auto-reply error:", err);
   }
+}
+
+async function computeHmacSha256Hex(secret: string, payload: string): Promise<string> {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sigBuf = await crypto.subtle.sign("HMAC", key, enc.encode(payload));
+  return Array.from(new Uint8Array(sigBuf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function timingSafeEqualHex(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i++) mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return mismatch === 0;
 }

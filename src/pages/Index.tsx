@@ -16,6 +16,9 @@ import Footer from "@/components/Footer";
 import FloatingButtons from "@/components/FloatingButtons";
 import PageMeta from "@/components/PageMeta";
 import PageTransition from "@/components/PageTransition";
+import { ScrollProgress } from "@/components/ScrollProgress";
+import { ScrollReveal } from "@/components/ScrollReveal";
+import { CostEstimator } from "@/components/CostEstimator";
 
 const Index = () => {
   return (

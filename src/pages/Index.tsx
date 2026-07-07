@@ -16,6 +16,9 @@ import Footer from "@/components/Footer";
 import FloatingButtons from "@/components/FloatingButtons";
 import PageMeta from "@/components/PageMeta";
 import PageTransition from "@/components/PageTransition";
+import { ScrollProgress } from "@/components/ScrollProgress";
+import { ScrollReveal } from "@/components/ScrollReveal";
+import { CostEstimator } from "@/components/CostEstimator";
 
 const Index = () => {
   return (
@@ -25,22 +28,24 @@ const Index = () => {
         description="شركة Brand Identity متخصصة في تأسيس وتجهيز المحلات التجارية داخل المولات - تصميم، تصنيع، تنفيذ. أكثر من 100 مشروع منفذ و135 فرع أبو عوف."
         canonical="https://brand-identity.alazab.com"
       />
+      <ScrollProgress />
       <div className="min-h-screen">
         <Header />
         <main id="main-content">
           <HeroSection />
-          <ClientLogos />
-          <ServicesSection />
-          <MallExpertise />
-          <AbuAufShowcase />
-          <BeforeAfter />
-          <ProjectsGallery />
-          <WorkSteps />
-          <TrustIndicators />
-          <Testimonials />
-          <FAQPreview />
-          <BlogPreview />
-          <CTABand />
+          <ScrollReveal><ClientLogos /></ScrollReveal>
+          <ScrollReveal><ServicesSection /></ScrollReveal>
+          <ScrollReveal direction="left"><MallExpertise /></ScrollReveal>
+          <ScrollReveal><AbuAufShowcase /></ScrollReveal>
+          <ScrollReveal direction="right"><BeforeAfter /></ScrollReveal>
+          <ScrollReveal><CostEstimator /></ScrollReveal>
+          <ScrollReveal><ProjectsGallery /></ScrollReveal>
+          <ScrollReveal direction="left"><WorkSteps /></ScrollReveal>
+          <ScrollReveal><TrustIndicators /></ScrollReveal>
+          <ScrollReveal><Testimonials /></ScrollReveal>
+          <ScrollReveal><FAQPreview /></ScrollReveal>
+          <ScrollReveal><BlogPreview /></ScrollReveal>
+          <ScrollReveal><CTABand /></ScrollReveal>
         </main>
         <Footer />
         <FloatingButtons />

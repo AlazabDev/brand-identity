@@ -6,6 +6,7 @@ import { ClientLogos } from "@/components/ClientLogos";
 import AbuAufShowcase from "@/components/AbuAufShowcase";
 import { BeforeAfter } from "@/components/BeforeAfter";
 import ProjectsGallery from "@/components/ProjectsGallery";
+import { FilterableGallery } from "@/components/FilterableGallery";
 import WorkSteps from "@/components/WorkSteps";
 import { TrustIndicators } from "@/components/TrustIndicators";
 import Testimonials from "@/components/Testimonials";
@@ -40,6 +41,7 @@ const Index = () => {
           <ScrollReveal direction="right"><BeforeAfter /></ScrollReveal>
           <ScrollReveal><CostEstimator /></ScrollReveal>
           <ScrollReveal><ProjectsGallery /></ScrollReveal>
+          <ScrollReveal direction="left"><FilterableGallery /></ScrollReveal>
           <ScrollReveal direction="left"><WorkSteps /></ScrollReveal>
           <ScrollReveal><TrustIndicators /></ScrollReveal>
           <ScrollReveal><Testimonials /></ScrollReveal>

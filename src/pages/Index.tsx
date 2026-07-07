@@ -41,6 +41,7 @@ const Index = () => {
           <ScrollReveal direction="right"><BeforeAfter /></ScrollReveal>
           <ScrollReveal><CostEstimator /></ScrollReveal>
           <ScrollReveal><ProjectsGallery /></ScrollReveal>
+          <ScrollReveal direction="left"><FilterableGallery /></ScrollReveal>
           <ScrollReveal direction="left"><WorkSteps /></ScrollReveal>
           <ScrollReveal><TrustIndicators /></ScrollReveal>
           <ScrollReveal><Testimonials /></ScrollReveal>

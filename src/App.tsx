@@ -74,6 +74,8 @@ function AnimatedRoutes() {
         <Route path="/works" element={<WorksPage />} />
         <Route path="/architecture" element={<ArchitectureProjectsPage />} />
         <Route path="/architecture/:id" element={<ArchitectureProjectDetailPage />} />
+        <Route path="/showcase" element={<ShowcaseIndexPage />} />
+        <Route path="/showcase/:slug" element={<ShowcaseDetailPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>

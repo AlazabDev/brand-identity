@@ -34,6 +34,8 @@ const WorksPage = lazy(() => import("./pages/works"));
 const ArchitectureProjectsPage = lazy(() => import("./pages/ArchitectureProjectsPage"));
 const ArchitectureProjectDetailPage = lazy(() => import("./pages/ArchitectureProjectDetailPage"));
 const AdminArchitecturePage = lazy(() => import("./pages/AdminArchitecturePage"));
+const ShowcaseIndexPage = lazy(() => import("./pages/ShowcaseIndexPage"));
+const ShowcaseDetailPage = lazy(() => import("./pages/ShowcaseDetailPage"));
 
 const queryClient = new QueryClient();
 

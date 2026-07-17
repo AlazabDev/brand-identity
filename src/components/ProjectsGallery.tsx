@@ -1,17 +1,15 @@
 import { motion } from "framer-motion";
 import { Eye, ArrowLeft, Images } from "lucide-react";
 import { Link } from "react-router-dom";
-import { galleryCategories, totalImageCount } from "@/data/galleryData";
+import { totalImageCount } from "@/data/galleryData";
+import { showcaseProjects } from "@/data/showcaseProjects";
 
-// Pick 6 curated images from different categories for homepage
-const featuredImages = [
-  { url: galleryCategories[1].images[0], label: "تجهيزات داخلية" },
-  { url: galleryCategories[2].images[0], label: "محلات تجارية" },
-  { url: galleryCategories[1].images[20], label: "تجهيزات داخلية" },
-  { url: galleryCategories[3].images[0], label: "مشاريع أبو عوف" },
-  { url: galleryCategories[2].images[30], label: "محلات تجارية" },
-  { url: galleryCategories[1].images[50], label: "تجهيزات داخلية" },
-];
+const featuredImages = showcaseProjects.slice(0, 6).map((p) => ({
+  url: p.cover,
+  label: p.service,
+  slug: p.slug,
+  title: p.title,
+}));
 
 const ProjectsGallery = () => {
   return (

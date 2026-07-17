@@ -57,12 +57,25 @@ const FilePreview = ({ file }: { file: ProjectFile }) => {
   }
   if (file.type === "model3d") {
     return (
-      <iframe
-        title={file.name}
-        src={file.url}
-        allowFullScreen
-        className="w-full h-full bg-black"
-      />
+      <div className="relative w-full h-full bg-black">
+        <iframe
+          title={file.name}
+          src={file.url}
+          allow="fullscreen; xr-spatial-tracking; accelerometer; gyroscope; magnetometer; camera; autoplay; clipboard-read; clipboard-write"
+          allowFullScreen
+          referrerPolicy="no-referrer-when-downgrade"
+          loading="lazy"
+          className="absolute inset-0 w-full h-full border-0"
+        />
+        <a
+          href={file.url}
+          target="_blank"
+          rel="noreferrer"
+          className="absolute top-3 left-3 z-10 inline-flex items-center gap-1.5 bg-background/90 hover:bg-background text-foreground text-xs font-body px-3 py-1.5 rounded-full border border-border shadow-sm"
+        >
+          <ExternalLink className="w-3.5 h-3.5" /> فتح في نافذة جديدة
+        </a>
+      </div>
     );
   }
   if (file.type === "xlsx") {

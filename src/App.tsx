@@ -34,6 +34,8 @@ const WorksPage = lazy(() => import("./pages/works"));
 const ArchitectureProjectsPage = lazy(() => import("./pages/ArchitectureProjectsPage"));
 const ArchitectureProjectDetailPage = lazy(() => import("./pages/ArchitectureProjectDetailPage"));
 const AdminArchitecturePage = lazy(() => import("./pages/AdminArchitecturePage"));
+const ShowcaseIndexPage = lazy(() => import("./pages/ShowcaseIndexPage"));
+const ShowcaseDetailPage = lazy(() => import("./pages/ShowcaseDetailPage"));
 
 const queryClient = new QueryClient();
 
@@ -72,6 +74,8 @@ function AnimatedRoutes() {
         <Route path="/works" element={<WorksPage />} />
         <Route path="/architecture" element={<ArchitectureProjectsPage />} />
         <Route path="/architecture/:id" element={<ArchitectureProjectDetailPage />} />
+        <Route path="/showcase" element={<ShowcaseIndexPage />} />
+        <Route path="/showcase/:slug" element={<ShowcaseDetailPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>

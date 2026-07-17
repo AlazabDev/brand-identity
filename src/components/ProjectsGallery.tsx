@@ -1,17 +1,15 @@
 import { motion } from "framer-motion";
 import { Eye, ArrowLeft, Images } from "lucide-react";
 import { Link } from "react-router-dom";
-import { galleryCategories, totalImageCount } from "@/data/galleryData";
+import { totalImageCount } from "@/data/galleryData";
+import { showcaseProjects } from "@/data/showcaseProjects";
 
-// Pick 6 curated images from different categories for homepage
-const featuredImages = [
-  { url: galleryCategories[1].images[0], label: "تجهيزات داخلية" },
-  { url: galleryCategories[2].images[0], label: "محلات تجارية" },
-  { url: galleryCategories[1].images[20], label: "تجهيزات داخلية" },
-  { url: galleryCategories[3].images[0], label: "مشاريع أبو عوف" },
-  { url: galleryCategories[2].images[30], label: "محلات تجارية" },
-  { url: galleryCategories[1].images[50], label: "تجهيزات داخلية" },
-];
+const featuredImages = showcaseProjects.slice(0, 6).map((p) => ({
+  url: p.cover,
+  label: p.service,
+  slug: p.slug,
+  title: p.title,
+}));
 
 const ProjectsGallery = () => {
   return (
@@ -36,31 +34,35 @@ const ProjectsGallery = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {featuredImages.map((project, i) => (
             <motion.div
-              key={i}
+              key={project.slug}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
               transition={{ delay: i * 0.1 }}
-              className="group relative rounded-2xl overflow-hidden aspect-[4/3] cursor-pointer"
             >
-              <img
-                src={project.url}
-                alt={project.label}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 image-crisp"
-                loading="lazy"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
-                <span className="text-xs font-display font-bold text-accent bg-accent/20 backdrop-blur-sm px-3 py-1 rounded-full w-fit mb-2">
-                  {project.label}
-                </span>
-                <Link
-                  to="/projects"
-                  className="inline-flex items-center gap-2 text-primary-foreground text-sm font-display font-bold"
-                >
-                  <Eye className="w-4 h-4" />
-                  شاهد المعرض الكامل
-                </Link>
-              </div>
+              <Link
+                to={`/showcase/${project.slug}`}
+                className="group relative rounded-2xl overflow-hidden aspect-[4/3] block"
+              >
+                <img
+                  src={project.url}
+                  alt={project.title}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 image-crisp"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6">
+                  <span className="text-xs font-display font-bold text-accent bg-accent/20 backdrop-blur-sm px-3 py-1 rounded-full w-fit mb-2">
+                    {project.label}
+                  </span>
+                  <h3 className="font-display font-bold text-white text-lg mb-1">
+                    {project.title}
+                  </h3>
+                  <span className="inline-flex items-center gap-2 text-primary-foreground/90 text-sm font-display font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Eye className="w-4 h-4" />
+                    استعرض التفاصيل
+                  </span>
+                </div>
+              </Link>
             </motion.div>
           ))}
         </div>

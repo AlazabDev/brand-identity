@@ -91,7 +91,7 @@ const AbuAufShowcase = () => {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ delay: i * 0.06 }}
-              className="relative rounded-xl overflow-hidden aspect-[4/3] group"
+              className="relative rounded-xl overflow-hidden aspect-square sm:aspect-[4/3] group"
             >
               <img
                 src={url}

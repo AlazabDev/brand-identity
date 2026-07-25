@@ -90,7 +90,7 @@ export const FilterableGallery = () => {
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ delay: Math.min(i * 0.03, 0.2) }}
                 onClick={() => setLightboxIndex(i)}
-                className="group relative rounded-2xl overflow-hidden aspect-[4/3] cursor-pointer bg-muted"
+                className="group relative rounded-2xl overflow-hidden aspect-square sm:aspect-[4/3] cursor-pointer bg-muted"
                 aria-label={`عرض الصورة ${i + 1}`}
               >
                 <img

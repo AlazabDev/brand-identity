@@ -42,7 +42,7 @@ const ProjectsGallery = () => {
             >
               <Link
                 to={`/showcase/${project.slug}`}
-                className="group relative rounded-2xl overflow-hidden aspect-[4/3] block"
+                className="group relative rounded-2xl overflow-hidden aspect-square sm:aspect-[4/3] block"
               >
                 <img
                   src={project.url}

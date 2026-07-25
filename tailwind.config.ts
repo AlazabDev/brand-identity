@@ -14,8 +14,10 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["Tajawal", "sans-serif"],
-        body: ["Cairo", "sans-serif"],
+        display: ["Almarai", "IBM Plex Sans Arabic", "sans-serif"],
+        body: ["IBM Plex Sans Arabic", "Almarai", "sans-serif"],
+        mono: ["JetBrains Mono", "ui-monospace", "monospace"],
+        numeric: ["IBM Plex Sans Arabic", "Tajawal", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",

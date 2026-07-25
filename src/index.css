@@ -57,8 +57,10 @@
     --shadow-card-hover: 0 0 0 1px rgba(3, 9, 87, 0.06), 0 4px 8px rgba(0,0,0,0.08), 0 20px 40px rgba(0,0,0,0.08);
     --shadow-header: 0 1px 3px rgba(3, 9, 87, 0.06), 0 4px 12px rgba(0,0,0,0.04);
 
-    --font-display: 'Tajawal', sans-serif;
-    --font-body: 'Cairo', sans-serif;
+    --font-display: 'Almarai', 'IBM Plex Sans Arabic', sans-serif;
+    --font-body: 'IBM Plex Sans Arabic', 'Almarai', sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    --font-numeric: 'IBM Plex Sans Arabic', 'Tajawal', sans-serif;
   }
 
   .dark {
@@ -132,11 +134,16 @@
 
 @layer components {
   .section-padding {
-    @apply px-4 py-16 md:px-8 md:py-24 lg:px-16 lg:py-32;
+    @apply px-4 py-12 sm:px-6 sm:py-16 md:px-8 md:py-24 lg:px-16 lg:py-28;
   }
 
   .container-custom {
-    @apply max-w-7xl mx-auto;
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .font-numeric {
+    font-family: var(--font-numeric);
+    font-feature-settings: "tnum" 1, "lnum" 1;
   }
 
   .gold-line {

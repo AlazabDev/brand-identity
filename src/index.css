@@ -134,11 +134,16 @@
 
 @layer components {
   .section-padding {
-    @apply px-4 py-16 md:px-8 md:py-24 lg:px-16 lg:py-32;
+    @apply px-4 py-12 sm:px-6 sm:py-16 md:px-8 md:py-24 lg:px-16 lg:py-28;
   }
 
   .container-custom {
-    @apply max-w-7xl mx-auto;
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .font-numeric {
+    font-family: var(--font-numeric);
+    font-feature-settings: "tnum" 1, "lnum" 1;
   }
 
   .gold-line {

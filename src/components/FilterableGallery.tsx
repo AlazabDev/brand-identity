@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { X, ChevronLeft, ChevronRight, ZoomIn, Images, ArrowLeft } from "lucide-react";
@@ -9,6 +9,8 @@ const PREVIEW_COUNT = 9;
 export const FilterableGallery = () => {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const touchStartX = useRef<number | null>(null);
+  const touchDeltaX = useRef<number>(0);
 
   const currentImages = useMemo(
     () => galleryCategories.find((c) => c.id === activeCategory)?.images ?? [],
@@ -127,20 +129,46 @@ export const FilterableGallery = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center"
+            className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center touch-pan-y"
             onClick={() => setLightboxIndex(null)}
+            onTouchStart={(e) => {
+              touchStartX.current = e.touches[0].clientX;
+              touchDeltaX.current = 0;
+            }}
+            onTouchMove={(e) => {
+              if (touchStartX.current !== null) {
+                touchDeltaX.current = e.touches[0].clientX - touchStartX.current;
+              }
+            }}
+            onTouchEnd={() => {
+              const dx = touchDeltaX.current;
+              const threshold = 50;
+              if (Math.abs(dx) > threshold && lightboxIndex !== null) {
+                // RTL: swipe right-to-left (dx<0) => next; swipe left-to-right (dx>0) => previous
+                if (dx < 0 && lightboxIndex < visibleImages.length - 1) {
+                  setLightboxIndex(lightboxIndex + 1);
+                } else if (dx > 0 && lightboxIndex > 0) {
+                  setLightboxIndex(lightboxIndex - 1);
+                }
+              }
+              touchStartX.current = null;
+              touchDeltaX.current = 0;
+            }}
             role="dialog"
             aria-label="عرض الصورة"
           >
             <button
-              onClick={() => setLightboxIndex(null)}
-              className="absolute top-4 left-4 z-10 w-12 h-12 rounded-full bg-card/10 backdrop-blur-sm flex items-center justify-center text-primary-foreground hover:bg-card/20 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                setLightboxIndex(null);
+              }}
+              className="absolute top-4 left-4 z-20 w-12 h-12 md:w-12 md:h-12 rounded-full bg-accent text-accent-foreground shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
               aria-label="إغلاق"
             >
               <X className="w-6 h-6" />
             </button>
 
-            <div className="absolute top-4 right-4 z-10 text-primary-foreground/70 text-sm font-body bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full">
+            <div className="absolute top-4 right-4 z-20 text-primary-foreground text-sm font-body bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-full">
               {lightboxIndex + 1} / {visibleImages.length}
             </div>
 
@@ -150,10 +178,10 @@ export const FilterableGallery = () => {
                   e.stopPropagation();
                   setLightboxIndex(lightboxIndex - 1);
                 }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-14 h-14 rounded-full bg-card/10 backdrop-blur-sm flex items-center justify-center text-primary-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-20 w-14 h-14 md:w-16 md:h-16 rounded-full bg-accent/95 text-accent-foreground shadow-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
                 aria-label="السابق"
               >
-                <ChevronRight className="w-7 h-7" />
+                <ChevronRight className="w-7 h-7 md:w-8 md:h-8" />
               </button>
             )}
 
@@ -163,25 +191,30 @@ export const FilterableGallery = () => {
                   e.stopPropagation();
                   setLightboxIndex(lightboxIndex + 1);
                 }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-14 h-14 rounded-full bg-card/10 backdrop-blur-sm flex items-center justify-center text-primary-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-20 w-14 h-14 md:w-16 md:h-16 rounded-full bg-accent/95 text-accent-foreground shadow-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
                 aria-label="التالي"
               >
-                <ChevronLeft className="w-7 h-7" />
+                <ChevronLeft className="w-7 h-7 md:w-8 md:h-8" />
               </button>
             )}
 
+            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 md:hidden text-primary-foreground/80 text-xs font-body bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-full">
+              اسحب يميناً أو يساراً للتنقل
+            </div>
+
             <motion.img
               key={lightboxIndex}
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
+              exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
               src={visibleImages[lightboxIndex]}
               alt={`مشروع ${lightboxIndex + 1}`}
-              className="max-w-[90vw] max-h-[85vh] rounded-xl object-contain"
-              onClick={(e) => e.stopPropagation()}
+              className="max-w-[92vw] max-h-[78vh] md:max-h-[85vh] rounded-xl object-contain select-none pointer-events-none"
+              draggable={false}
             />
           </motion.div>
+
         )}
       </AnimatePresence>
     </section>

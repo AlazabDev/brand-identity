@@ -9,6 +9,8 @@ const PREVIEW_COUNT = 9;
 export const FilterableGallery = () => {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const touchStartX = useRef<number | null>(null);
+  const touchDeltaX = useRef<number>(0);
 
   const currentImages = useMemo(
     () => galleryCategories.find((c) => c.id === activeCategory)?.images ?? [],

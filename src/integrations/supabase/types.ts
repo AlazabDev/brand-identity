@@ -14,6 +14,258 @@ export type Database = {
   }
   public: {
     Tables: {
+      blog_posts: {
+        Row: {
+          category: string | null
+          content: string | null
+          cover_image: string | null
+          created_at: string
+          excerpt: string | null
+          id: string
+          published: boolean | null
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          content?: string | null
+          cover_image?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          published?: boolean | null
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          content?: string | null
+          cover_image?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          published?: boolean | null
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      contact_messages: {
+        Row: {
+          area: string | null
+          business_type: string | null
+          created_at: string
+          email: string | null
+          id: string
+          mall: string | null
+          message: string | null
+          name: string
+          phone: string | null
+          read: boolean | null
+        }
+        Insert: {
+          area?: string | null
+          business_type?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          mall?: string | null
+          message?: string | null
+          name: string
+          phone?: string | null
+          read?: boolean | null
+        }
+        Update: {
+          area?: string | null
+          business_type?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          mall?: string | null
+          message?: string | null
+          name?: string
+          phone?: string | null
+          read?: boolean | null
+        }
+        Relationships: []
+      }
+      job_applications: {
+        Row: {
+          created_at: string
+          email: string | null
+          experience_years: string | null
+          full_name: string
+          id: string
+          message: string | null
+          phone: string | null
+          position: string
+          read: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          experience_years?: string | null
+          full_name: string
+          id?: string
+          message?: string | null
+          phone?: string | null
+          position: string
+          read?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          experience_years?: string | null
+          full_name?: string
+          id?: string
+          message?: string | null
+          phone?: string | null
+          position?: string
+          read?: boolean | null
+        }
+        Relationships: []
+      }
+      platform_connections: {
+        Row: {
+          access_token: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          metadata: Json | null
+          platform: string
+          refresh_token: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          platform: string
+          refresh_token?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          platform?: string
+          refresh_token?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          area: string | null
+          category: string
+          client_name: string | null
+          completion_date: string | null
+          created_at: string
+          description: string | null
+          featured: boolean | null
+          id: string
+          images: string[] | null
+          mall: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          area?: string | null
+          category?: string
+          client_name?: string | null
+          completion_date?: string | null
+          created_at?: string
+          description?: string | null
+          featured?: boolean | null
+          id?: string
+          images?: string[] | null
+          mall?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          area?: string | null
+          category?: string
+          client_name?: string | null
+          completion_date?: string | null
+          created_at?: string
+          description?: string | null
+          featured?: boolean | null
+          id?: string
+          images?: string[] | null
+          mall?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      quote_requests: {
+        Row: {
+          area: string | null
+          budget: string | null
+          business_type: string | null
+          client_name: string
+          created_at: string
+          email: string | null
+          id: string
+          mall: string | null
+          notes: string | null
+          opening_date: string | null
+          phone: string | null
+          read: boolean | null
+          services: string[] | null
+          shop_name: string | null
+          shop_number: string | null
+          shop_status: string | null
+        }
+        Insert: {
+          area?: string | null
+          budget?: string | null
+          business_type?: string | null
+          client_name: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          mall?: string | null
+          notes?: string | null
+          opening_date?: string | null
+          phone?: string | null
+          read?: boolean | null
+          services?: string[] | null
+          shop_name?: string | null
+          shop_number?: string | null
+          shop_status?: string | null
+        }
+        Update: {
+          area?: string | null
+          budget?: string | null
+          business_type?: string | null
+          client_name?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          mall?: string | null
+          notes?: string | null
+          opening_date?: string | null
+          phone?: string | null
+          read?: boolean | null
+          services?: string[] | null
+          shop_name?: string | null
+          shop_number?: string | null
+          shop_status?: string | null
+        }
+        Relationships: []
+      }
       supcloud_keepalive: {
         Row: {
           id: number
@@ -29,15 +281,114 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      webhook_logs: {
+        Row: {
+          created_at: string
+          endpoint: string
+          event_type: string
+          id: string
+          payload: Json | null
+          platform: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          event_type: string
+          id?: string
+          payload?: Json | null
+          platform?: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          platform?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      whatsapp_messages: {
+        Row: {
+          content: string | null
+          created_at: string
+          direction: string
+          from_name: string | null
+          from_number: string | null
+          id: string
+          media_url: string | null
+          message_id: string | null
+          message_type: string
+          status: string
+          timestamp: string
+          to_number: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          direction?: string
+          from_name?: string | null
+          from_number?: string | null
+          id?: string
+          media_url?: string | null
+          message_id?: string | null
+          message_type?: string
+          status?: string
+          timestamp?: string
+          to_number?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          direction?: string
+          from_name?: string | null
+          from_number?: string | null
+          id?: string
+          media_url?: string | null
+          message_id?: string | null
+          message_type?: string
+          status?: string
+          timestamp?: string
+          to_number?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -164,6 +515,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const

@@ -26,11 +26,14 @@ export const FileUpload = ({ onFileUploaded, disabled }: FileUploadProps) => {
 
     if (error || !data) return;
 
-    const { data: urlData } = supabase.storage
+    // Bucket is private: expose a temporary signed URL instead of a public one.
+    const { data: urlData } = await supabase.storage
       .from("chat-files")
-      .getPublicUrl(data.path);
+      .createSignedUrl(data.path, 60 * 60);
 
-    onFileUploaded(urlData.publicUrl);
+    if (!urlData) return;
+
+    onFileUploaded(urlData.signedUrl);
 
     if (fileRef.current) fileRef.current.value = "";
   };

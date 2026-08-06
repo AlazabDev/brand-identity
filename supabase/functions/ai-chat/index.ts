@@ -181,8 +181,11 @@ serve(async (req) => {
     if (!isAllowed) {
       try {
         const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+        const projectRef = new URL(projectUrl).hostname.split(".")[0];
         const issuerMatches =
-          typeof payload.iss === "string" && payload.iss.includes(new URL(projectUrl).hostname.split(".")[0]);
+          typeof payload.iss === "string" &&
+          (payload.iss === "supabase" || payload.iss.includes(projectRef));
+        const refMatches = payload.ref === undefined || payload.ref === projectRef;
         const notExpired = typeof payload.exp === "number" && payload.exp * 1000 > Date.now();
         isAllowed = issuerMatches && notExpired && ["anon", "authenticated"].includes(payload.role);
       } catch {

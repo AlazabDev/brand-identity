@@ -171,11 +171,14 @@ serve(async (req) => {
       });
     }
     const token = authHeader.replace("Bearer ", "").trim();
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    if (token !== anonKey) {
-      const authClient = createClient(Deno.env.get("SUPABASE_URL")!, anonKey);
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+    const publishableKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? "";
+    const isProjectKey = token === anonKey || token === publishableKey;
+    if (!isProjectKey) {
+      const authClient = createClient(Deno.env.get("SUPABASE_URL")!, anonKey || publishableKey);
       const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
       if (claimsError || !claimsData?.claims) {
+        console.error("auth check failed:", claimsError?.message);
         return new Response(JSON.stringify({ error: "Unauthorized" }), {
           status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },

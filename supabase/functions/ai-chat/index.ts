@@ -171,19 +171,30 @@ serve(async (req) => {
       });
     }
     const token = authHeader.replace("Bearer ", "").trim();
+    const projectUrl = Deno.env.get("SUPABASE_URL")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
-    const publishableKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? "";
-    const isProjectKey = token === anonKey || token === publishableKey;
-    if (!isProjectKey) {
-      const authClient = createClient(Deno.env.get("SUPABASE_URL")!, anonKey || publishableKey);
-      const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
-      if (claimsError || !claimsData?.claims) {
-        console.error("auth check failed:", claimsError?.message);
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+    const authClient = createClient(projectUrl, anonKey);
+    const { data: claimsData } = await authClient.auth.getClaims(token);
+    let isAllowed = Boolean(claimsData?.claims);
+
+    // Anonymous project keys carry no `sub` claim, so validate issuer/expiry manually.
+    if (!isAllowed) {
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+        const issuerMatches =
+          typeof payload.iss === "string" && payload.iss.includes(new URL(projectUrl).hostname.split(".")[0]);
+        const notExpired = typeof payload.exp === "number" && payload.exp * 1000 > Date.now();
+        isAllowed = issuerMatches && notExpired && ["anon", "authenticated"].includes(payload.role);
+      } catch {
+        isAllowed = false;
       }
+    }
+
+    if (!isAllowed) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const { messages } = (await req.json()) as { messages: ChatMessage[] };

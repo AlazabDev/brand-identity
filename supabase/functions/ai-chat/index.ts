@@ -187,7 +187,8 @@ serve(async (req) => {
           (payload.iss === "supabase" || payload.iss.includes(projectRef));
         const refMatches = payload.ref === undefined || payload.ref === projectRef;
         const notExpired = typeof payload.exp === "number" && payload.exp * 1000 > Date.now();
-        isAllowed = issuerMatches && notExpired && ["anon", "authenticated"].includes(payload.role);
+        isAllowed =
+          issuerMatches && refMatches && notExpired && ["anon", "authenticated"].includes(payload.role);
       } catch {
         isAllowed = false;
       }

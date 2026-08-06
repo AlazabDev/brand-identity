@@ -82,6 +82,8 @@ async function callAzure(messages: ChatMessage[], apimKey: string): Promise<Resp
       method: "POST",
       headers: {
         "Ocp-Apim-Subscription-Key": apimKey,
+        "api-key": apimKey,
+        Authorization: `Bearer ${apimKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({

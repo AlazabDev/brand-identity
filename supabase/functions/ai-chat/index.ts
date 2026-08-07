@@ -104,6 +104,7 @@ async function callAzure(messages: ChatMessage[], apimKey: string): Promise<Resp
             },
           ],
         })),
+        reasoning: { effort: "low" },
         stream: true,
       }),
     });

@@ -123,8 +123,8 @@ server {
 
     # Supabase Edge Functions proxy
     location /functions/v1/ {
-        proxy_pass https://drtsurlnlxxhwimbkfse.supabase.co/functions/v1/;
-        proxy_set_header Host drtsurlnlxxhwimbkfse.supabase.co;
+        proxy_pass https://tcjbcbmvkajwnsuzhefh.supabase.co/functions/v1/;
+        proxy_set_header Host tcjbcbmvkajwnsuzhefh.supabase.co;
         proxy_ssl_server_name on;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -134,18 +134,18 @@ server {
 
     # Auth & API & Webhook routes (proxy to Supabase Edge Functions)
     location /auth/v1/callback {
-        proxy_pass https://drtsurlnlxxhwimbkfse.supabase.co/functions/v1/auth-callback;
-        proxy_set_header Host drtsurlnlxxhwimbkfse.supabase.co;
+        proxy_pass https://tcjbcbmvkajwnsuzhefh.supabase.co/functions/v1/auth-callback;
+        proxy_set_header Host tcjbcbmvkajwnsuzhefh.supabase.co;
         proxy_ssl_server_name on;
     }
     location /api/v1/ {
-        proxy_pass https://drtsurlnlxxhwimbkfse.supabase.co/functions/v1/api-handler/;
-        proxy_set_header Host drtsurlnlxxhwimbkfse.supabase.co;
+        proxy_pass https://tcjbcbmvkajwnsuzhefh.supabase.co/functions/v1/api-handler/;
+        proxy_set_header Host tcjbcbmvkajwnsuzhefh.supabase.co;
         proxy_ssl_server_name on;
     }
     location /api/webhook {
-        proxy_pass https://drtsurlnlxxhwimbkfse.supabase.co/functions/v1/whatsapp-webhook;
-        proxy_set_header Host drtsurlnlxxhwimbkfse.supabase.co;
+        proxy_pass https://tcjbcbmvkajwnsuzhefh.supabase.co/functions/v1/whatsapp-webhook;
+        proxy_set_header Host tcjbcbmvkajwnsuzhefh.supabase.co;
         proxy_ssl_server_name on;
     }
 

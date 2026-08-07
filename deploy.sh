@@ -36,6 +36,12 @@ NODE_V=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
 [ "$NODE_V" -ge 18 ] || err "يتطلب Node 18+. الحالي: $(node -v)"
 ok "المتطلبات جاهزة — Node $(node -v) | pnpm $(pnpm -v)"
 
+# ─── 1b. Environment ───
+[ -f .env ] || err "ملف .env غير موجود — مطلوب VITE_SUPABASE_URL و VITE_SUPABASE_PUBLISHABLE_KEY"
+grep -q "VITE_SUPABASE_URL" .env || err ".env ناقص VITE_SUPABASE_URL"
+grep -q "VITE_SUPABASE_PUBLISHABLE_KEY" .env || err ".env ناقص VITE_SUPABASE_PUBLISHABLE_KEY"
+ok "متغيرات البيئة جاهزة"
+
 # ─── 2. Install ───
 info "تثبيت الحزم..."
 pnpm install --frozen-lockfile 2>/dev/null || pnpm install

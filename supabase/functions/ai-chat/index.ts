@@ -42,6 +42,7 @@ function toChatCompletionStream(azureBody: ReadableStream<Uint8Array>): Readable
   const encoder = new TextEncoder();
   const reader = azureBody.getReader();
   let buffer = "";
+  let loggedFirstChunk = false;
 
   return new ReadableStream({
     async pull(controller) {
@@ -51,7 +52,12 @@ function toChatCompletionStream(azureBody: ReadableStream<Uint8Array>): Readable
         controller.close();
         return;
       }
-      buffer += decoder.decode(value, { stream: true });
+      const chunk = decoder.decode(value, { stream: true });
+      if (!loggedFirstChunk) {
+        loggedFirstChunk = true;
+        console.log("Azure first chunk:", chunk.slice(0, 300));
+      }
+      buffer += chunk;
       let idx: number;
       while ((idx = buffer.indexOf("\n")) !== -1) {
         let line = buffer.slice(0, idx);

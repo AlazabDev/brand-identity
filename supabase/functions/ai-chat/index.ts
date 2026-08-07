@@ -45,36 +45,46 @@ function toChatCompletionStream(azureBody: ReadableStream<Uint8Array>): Readable
   let loggedFirstChunk = false;
 
   return new ReadableStream({
-    async pull(controller) {
-      const { done, value } = await reader.read();
-      if (done) {
-        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-        controller.close();
-        return;
-      }
-      const chunk = decoder.decode(value, { stream: true });
-      if (!loggedFirstChunk) {
-        loggedFirstChunk = true;
-        console.log("Azure first chunk:", chunk.slice(0, 300));
-      }
-      buffer += chunk;
-      let idx: number;
-      while ((idx = buffer.indexOf("\n")) !== -1) {
-        let line = buffer.slice(0, idx);
-        buffer = buffer.slice(idx + 1);
-        if (line.endsWith("\r")) line = line.slice(0, -1);
-        if (!line.startsWith("data:")) continue;
-        const payload = line.slice(5).trim();
-        if (!payload || payload === "[DONE]") continue;
-        try {
-          const event = JSON.parse(payload);
-          if (event.type === "response.output_text.delta" && typeof event.delta === "string") {
-            controller.enqueue(encoder.encode(sseLine(event.delta)));
+    async start(controller) {
+      // Open the SSE stream immediately so proxies keep the connection alive.
+      controller.enqueue(encoder.encode(": connected\n\n"));
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value, { stream: true });
+          if (!loggedFirstChunk) {
+            loggedFirstChunk = true;
+            console.log("Azure first chunk:", chunk.slice(0, 200));
           }
-        } catch {
-          // Ignore partial or non-JSON events.
+          buffer += chunk;
+          let idx: number;
+          while ((idx = buffer.indexOf("\n")) !== -1) {
+            let line = buffer.slice(0, idx);
+            buffer = buffer.slice(idx + 1);
+            if (line.endsWith("\r")) line = line.slice(0, -1);
+            if (!line.startsWith("data:")) {
+              // Keep the connection warm while the model reasons.
+              controller.enqueue(encoder.encode(": ping\n\n"));
+              continue;
+            }
+            const payload = line.slice(5).trim();
+            if (!payload || payload === "[DONE]") continue;
+            try {
+              const event = JSON.parse(payload);
+              if (event.type === "response.output_text.delta" && typeof event.delta === "string") {
+                controller.enqueue(encoder.encode(sseLine(event.delta)));
+              }
+            } catch {
+              // Ignore partial or non-JSON events.
+            }
+          }
         }
+      } catch (error) {
+        console.error("Azure stream error:", error);
       }
+      controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+      controller.close();
     },
     cancel(reason) {
       return reader.cancel(reason);

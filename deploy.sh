@@ -36,6 +36,12 @@ NODE_V=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
 [ "$NODE_V" -ge 18 ] || err "يتطلب Node 18+. الحالي: $(node -v)"
 ok "المتطلبات جاهزة — Node $(node -v) | pnpm $(pnpm -v)"
 
+# ─── 1b. Environment ───
+[ -f .env ] || err "ملف .env غير موجود — مطلوب VITE_SUPABASE_URL و VITE_SUPABASE_PUBLISHABLE_KEY"
+grep -q "VITE_SUPABASE_URL" .env || err ".env ناقص VITE_SUPABASE_URL"
+grep -q "VITE_SUPABASE_PUBLISHABLE_KEY" .env || err ".env ناقص VITE_SUPABASE_PUBLISHABLE_KEY"
+ok "متغيرات البيئة جاهزة"
+
 # ─── 2. Install ───
 info "تثبيت الحزم..."
 pnpm install --frozen-lockfile 2>/dev/null || pnpm install
@@ -123,8 +129,8 @@ server {
 
     # Supabase Edge Functions proxy
     location /functions/v1/ {
-        proxy_pass https://drtsurlnlxxhwimbkfse.supabase.co/functions/v1/;
-        proxy_set_header Host drtsurlnlxxhwimbkfse.supabase.co;
+        proxy_pass https://tcjbcbmvkajwnsuzhefh.supabase.co/functions/v1/;
+        proxy_set_header Host tcjbcbmvkajwnsuzhefh.supabase.co;
         proxy_ssl_server_name on;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -134,18 +140,18 @@ server {
 
     # Auth & API & Webhook routes (proxy to Supabase Edge Functions)
     location /auth/v1/callback {
-        proxy_pass https://drtsurlnlxxhwimbkfse.supabase.co/functions/v1/auth-callback;
-        proxy_set_header Host drtsurlnlxxhwimbkfse.supabase.co;
+        proxy_pass https://tcjbcbmvkajwnsuzhefh.supabase.co/functions/v1/auth-callback;
+        proxy_set_header Host tcjbcbmvkajwnsuzhefh.supabase.co;
         proxy_ssl_server_name on;
     }
     location /api/v1/ {
-        proxy_pass https://drtsurlnlxxhwimbkfse.supabase.co/functions/v1/api-handler/;
-        proxy_set_header Host drtsurlnlxxhwimbkfse.supabase.co;
+        proxy_pass https://tcjbcbmvkajwnsuzhefh.supabase.co/functions/v1/api-handler/;
+        proxy_set_header Host tcjbcbmvkajwnsuzhefh.supabase.co;
         proxy_ssl_server_name on;
     }
     location /api/webhook {
-        proxy_pass https://drtsurlnlxxhwimbkfse.supabase.co/functions/v1/whatsapp-webhook;
-        proxy_set_header Host drtsurlnlxxhwimbkfse.supabase.co;
+        proxy_pass https://tcjbcbmvkajwnsuzhefh.supabase.co/functions/v1/whatsapp-webhook;
+        proxy_set_header Host tcjbcbmvkajwnsuzhefh.supabase.co;
         proxy_ssl_server_name on;
     }
 

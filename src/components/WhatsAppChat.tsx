@@ -408,16 +408,26 @@ const WhatsAppChat = () => {
       </div>
       <input
         type="text"
-        placeholder="رقم الطلب (MR-25-XXXXX) أو رقم الهاتف"
+        placeholder="رقم الطلب (MR-25-XXXXX)"
         value={queryInput}
         onChange={(e) => setQueryInput(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && handleQueryRequest()}
         className="w-full rounded-xl border border-border bg-muted px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
         dir="ltr"
       />
+      <input
+        type="tel"
+        placeholder="رقم الهاتف المسجل بالطلب"
+        value={queryPhone}
+        onChange={(e) => setQueryPhone(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && handleQueryRequest()}
+        className="w-full rounded-xl border border-border bg-muted px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
+        dir="ltr"
+      />
       <button
         onClick={handleQueryRequest}
-        disabled={sending || !queryInput.trim()}
+        disabled={sending || !queryInput.trim() || !queryPhone.trim()}
+
         className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm font-display hover:bg-primary/90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
       >
         {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}

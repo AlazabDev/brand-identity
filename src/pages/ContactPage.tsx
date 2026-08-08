@@ -35,6 +35,12 @@ const buildWhatsAppUrl = (data: ContactForm): string => {
   return `https://wa.me/201004006620?text=${encodeURIComponent(text)}`;
 };
 
+const fieldClass = (hasError?: string): string =>
+  `w-full min-h-11 px-4 py-3 rounded-lg border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 ${
+    hasError ? "border-destructive" : "border-border"
+  }`;
+
+
 const ContactPage = () => {
   const [form, setForm] = useState<ContactForm>(initialForm);
   const [submitting, setSubmitting] = useState(false);

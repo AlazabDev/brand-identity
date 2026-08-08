@@ -151,38 +151,67 @@ const ContactPage = () => {
                 >
                   <h2 className="font-display font-bold text-2xl text-foreground mb-2">أرسل لنا رسالة</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <input type="text" placeholder="الاسم الكامل *" required maxLength={100} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" />
-                    <input type="email" placeholder="البريد الإلكتروني" maxLength={255} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" />
-                    <input type="tel" placeholder="رقم الجوال (01xxxxxxxxx)" maxLength={20} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" />
-                    <select value={form.activity} onChange={(e) => setForm({ ...form, activity: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50">
-                      <option value="">نوع النشاط</option>
-                      <option>ملابس وأزياء</option>
-                      <option>مطاعم وكافيهات</option>
-                      <option>مجوهرات وإكسسوارات</option>
-                      <option>إلكترونيات</option>
-                      <option>أخرى</option>
-                    </select>
-                    <input type="text" placeholder="المول المطلوب" maxLength={100} value={form.mall} onChange={(e) => setForm({ ...form, mall: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" />
-                    <input type="text" placeholder="المساحة (م²)" maxLength={20} value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" />
+                    <div>
+                      <label htmlFor="contact-name" className="block mb-1 font-body text-xs text-muted-foreground">الاسم الكامل *</label>
+                      <input id="contact-name" type="text" placeholder="الاسم الكامل" required maxLength={100} value={form.name} aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? "contact-name-error" : undefined} onChange={(e) => setForm({ ...form, name: e.target.value })} className={fieldClass(errors.name)} />
+                      {errors.name && <p id="contact-name-error" className="mt-1 font-body text-xs text-destructive">{errors.name}</p>}
+                    </div>
+                    <div>
+                      <label htmlFor="contact-email" className="block mb-1 font-body text-xs text-muted-foreground">البريد الإلكتروني</label>
+                      <input id="contact-email" type="email" placeholder="name@example.com" maxLength={255} value={form.email} aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? "contact-email-error" : undefined} onChange={(e) => setForm({ ...form, email: e.target.value })} className={fieldClass(errors.email)} />
+                      {errors.email && <p id="contact-email-error" className="mt-1 font-body text-xs text-destructive">{errors.email}</p>}
+                    </div>
+                    <div>
+                      <label htmlFor="contact-phone" className="block mb-1 font-body text-xs text-muted-foreground">رقم الجوال</label>
+                      <input id="contact-phone" type="tel" inputMode="tel" placeholder="01xxxxxxxxx" maxLength={20} value={form.phone} aria-invalid={Boolean(errors.phone)} aria-describedby={errors.phone ? "contact-phone-error" : undefined} onChange={(e) => setForm({ ...form, phone: e.target.value })} className={fieldClass(errors.phone)} />
+                      {errors.phone && <p id="contact-phone-error" className="mt-1 font-body text-xs text-destructive">{errors.phone}</p>}
+                    </div>
+                    <div>
+                      <label htmlFor="contact-activity" className="block mb-1 font-body text-xs text-muted-foreground">نوع النشاط</label>
+                      <select id="contact-activity" value={form.activity} onChange={(e) => setForm({ ...form, activity: e.target.value })} className={fieldClass(errors.activity)}>
+                        <option value="">اختر نوع النشاط</option>
+                        <option>ملابس وأزياء</option>
+                        <option>مطاعم وكافيهات</option>
+                        <option>مجوهرات وإكسسوارات</option>
+                        <option>إلكترونيات</option>
+                        <option>أخرى</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="contact-mall" className="block mb-1 font-body text-xs text-muted-foreground">المول المطلوب</label>
+                      <input id="contact-mall" type="text" placeholder="اسم المول" maxLength={100} value={form.mall} onChange={(e) => setForm({ ...form, mall: e.target.value })} className={fieldClass(errors.mall)} />
+                    </div>
+                    <div>
+                      <label htmlFor="contact-area" className="block mb-1 font-body text-xs text-muted-foreground">المساحة (م²)</label>
+                      <input id="contact-area" type="text" inputMode="numeric" placeholder="مثال: 120" maxLength={20} value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} className={fieldClass(errors.area)} />
+                    </div>
                   </div>
-                  <textarea placeholder="رسالتك..." rows={4} maxLength={2000} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 resize-none" />
+                  <div>
+                    <label htmlFor="contact-message" className="block mb-1 font-body text-xs text-muted-foreground">رسالتك</label>
+                    <textarea id="contact-message" placeholder="اكتب تفاصيل مشروعك..." rows={4} maxLength={2000} value={form.message} aria-invalid={Boolean(errors.message)} aria-describedby={errors.message ? "contact-message-error" : undefined} onChange={(e) => setForm({ ...form, message: e.target.value })} className={`${fieldClass(errors.message)} resize-none`} />
+                    {errors.message && <p id="contact-message-error" className="mt-1 font-body text-xs text-destructive">{errors.message}</p>}
+                  </div>
                   <div className="flex flex-wrap items-center gap-3">
-                    <button type="submit" disabled={submitting} className="inline-flex items-center gap-2 px-8 py-3 rounded-lg bg-accent text-accent-foreground font-display font-bold hover:-translate-y-0.5 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                      {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />} إرسال الرسالة
+                    <button type="submit" disabled={submitting} className="inline-flex min-h-11 items-center gap-2 px-8 py-3 rounded-lg bg-accent text-accent-foreground font-display font-bold hover:-translate-y-0.5 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                      {submitting ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Send className="w-4 h-4" aria-hidden="true" />} {submitting ? "جارٍ الإرسال..." : "إرسال الرسالة"}
                     </button>
                     {whatsAppUrl && (
                       <a
                         href={whatsAppUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-accent text-accent font-display font-bold hover:bg-accent/10 transition-colors"
+                        className="inline-flex min-h-11 items-center gap-2 px-6 py-3 rounded-lg border border-accent text-accent font-display font-bold hover:bg-accent/10 transition-colors"
                       >
-                        <MessageCircle className="w-4 h-4" />
+                        <MessageCircle className="w-4 h-4" aria-hidden="true" />
                         إرسال نسخة عبر واتساب
                       </a>
                     )}
                   </div>
+                  <p aria-live="polite" className="font-body text-xs text-muted-foreground">
+                    {whatsAppUrl ? "تم استلام رسالتك بنجاح، سنتواصل معك قريباً." : ""}
+                  </p>
                 </motion.form>
+
 
                 <motion.div
                   initial={{ opacity: 0, x: -30 }}

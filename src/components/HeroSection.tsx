@@ -50,7 +50,7 @@ function Counter({ target, suffix }: { target: number; suffix: string }) {
 
 const HeroSection = () => {
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden">
+    <section className="relative min-h-[100dvh] flex items-center overflow-hidden">
       {/* Background Image with slow zoom */}
       <motion.div
         className="absolute inset-0"
@@ -61,6 +61,8 @@ const HeroSection = () => {
         <img
           src={HERO_IMAGE}
           alt="محل تجاري فاخر داخل مول"
+          fetchPriority="high"
+          decoding="async"
           className="w-full h-full object-cover"
         />
       </motion.div>

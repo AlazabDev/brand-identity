@@ -40,6 +40,7 @@ const ContactPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [lastSubmittedAt, setLastSubmittedAt] = useState<number>(0);
   const [whatsAppUrl, setWhatsAppUrl] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Partial<Record<keyof ContactForm, string>>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,9 +53,17 @@ const ContactPage = () => {
 
     const parsed = contactSchema.safeParse(form);
     if (!parsed.success) {
+      const fieldErrors: Partial<Record<keyof ContactForm, string>> = {};
+      for (const issue of parsed.error.issues) {
+        const key = issue.path[0] as keyof ContactForm | undefined;
+        if (key && !fieldErrors[key]) fieldErrors[key] = issue.message;
+      }
+      setErrors(fieldErrors);
       toast.error(firstZodError(parsed.error));
       return;
     }
+    setErrors({});
+
 
     setSubmitting(true);
     try {

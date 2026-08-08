@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { X, ChevronLeft, ChevronRight, ZoomIn, Images, ArrowLeft } from "lucide-react";
 import { galleryCategories, totalImageCount } from "@/data/galleryData";
+import { SmartImage } from "@/components/smart-image";
 
 const PREVIEW_COUNT = 9;
 

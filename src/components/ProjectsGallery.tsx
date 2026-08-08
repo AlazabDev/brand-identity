@@ -3,6 +3,7 @@ import { Eye, ArrowLeft, Images } from "lucide-react";
 import { Link } from "react-router-dom";
 import { totalImageCount } from "@/data/galleryData";
 import { showcaseProjects } from "@/data/showcaseProjects";
+import { SmartImage } from "@/components/smart-image";
 
 const featuredImages = showcaseProjects.slice(0, 6).map((p) => ({
   url: p.cover,
@@ -44,11 +45,11 @@ const ProjectsGallery = () => {
                 to={`/showcase/${project.slug}`}
                 className="group relative rounded-2xl overflow-hidden aspect-square sm:aspect-[4/3] block"
               >
-                <img
+                <SmartImage
                   src={project.url}
                   alt={project.title}
+                  sizes="(max-width: 640px) 100vw, 33vw"
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 image-crisp"
-                  loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6">
                   <span className="text-xs font-display font-bold text-accent bg-accent/20 backdrop-blur-sm px-3 py-1 rounded-full w-fit mb-2">

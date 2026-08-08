@@ -8,6 +8,7 @@ import PageMeta from "@/components/PageMeta";
 import PageTransition from "@/components/PageTransition";
 import { Badge } from "@/components/ui/badge";
 import { showcaseProjects } from "@/data/showcaseProjects";
+import { SmartImage } from "@/components/smart-image";
 
 const iconMap = {
   store: Store,
@@ -62,10 +63,10 @@ export const ShowcaseIndexPage = () => {
                         className="group block rounded-2xl overflow-hidden bg-card border border-border hover:border-accent transition-colors"
                       >
                         <div className="relative aspect-[4/3] overflow-hidden">
-                          <img
+                          <SmartImage
                             src={p.cover}
                             alt={p.title}
-                            loading="lazy"
+                            sizes="(max-width: 640px) 100vw, 33vw"
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                           />
                           <Badge className="absolute top-3 right-3 bg-accent text-accent-foreground inline-flex items-center gap-1">

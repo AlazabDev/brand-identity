@@ -54,41 +54,34 @@ const PRIORITY_LABELS: Record<string, { label: string; color: string }> = {
 
 const MaintenanceTrackingPage = () => {
   const [query, setQuery] = useState("");
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<MaintenanceRequest[] | null>(null);
   const [error, setError] = useState("");
 
   const handleSearch = async () => {
     const q = query.trim();
-    if (!q) return;
+    const p = phone.trim();
+    if (!q || !p) return;
     setLoading(true);
     setError("");
     setResults(null);
 
     try {
-      const isRequestNum = /^MR-/i.test(q);
-      const body = isRequestNum
-        ? { action: "query", request_number: q }
-        : { action: "query", client_phone: q };
-
-      const { data, error: fnError } = await supabase.functions.invoke("maintenance-proxy", { body });
+      const { data, error: fnError } = await supabase.functions.invoke("maintenance-proxy", {
+        body: { action: "query", request_number: q, client_phone: p },
+      });
       if (fnError) throw fnError;
 
-      const requests = data?.data?.data || data?.data?.requests || data?.data || [];
-      if (Array.isArray(requests) && requests.length > 0) {
-        setResults(requests);
-      } else if (typeof requests === "object" && requests.request_number) {
-        setResults([requests]);
-      } else {
-        setResults([]);
-      }
-    } catch (err) {
-      console.error("Tracking query error:", err);
+      const requests = data?.data?.requests || [];
+      setResults(Array.isArray(requests) ? requests : []);
+    } catch {
       setError("حدث خطأ في البحث. يرجى المحاولة مرة أخرى.");
     } finally {
       setLoading(false);
     }
   };
+
 
   const getStatusConfig = (status: string) => {
     const key = status?.toLowerCase().replace(/\s/g, "_");
@@ -117,7 +110,7 @@ const MaintenanceTrackingPage = () => {
               تتبع طلبات الصيانة
             </h1>
             <p className="text-muted-foreground text-lg">
-              أدخل رقم الطلب أو رقم هاتفك لمعرفة حالة طلبك
+              أدخل رقم الطلب ورقم الهاتف المستخدم عند إنشاء الطلب
             </p>
           </motion.div>
 
@@ -129,19 +122,28 @@ const MaintenanceTrackingPage = () => {
           >
             <Card className="mb-8 border-border/50 shadow-lg">
               <CardContent className="p-6">
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <Input
                     type="text"
-                    placeholder="رقم الطلب (MR-26-XXXXX) أو رقم الهاتف (01xxxxxxxxx)"
+                    placeholder="رقم الطلب (MR-26-XXXXX)"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                     className="flex-1 text-base"
                     dir="ltr"
                   />
+                  <Input
+                    type="tel"
+                    placeholder="رقم الهاتف (01xxxxxxxxx)"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                    className="flex-1 text-base"
+                    dir="ltr"
+                  />
                   <Button
                     onClick={handleSearch}
-                    disabled={loading || !query.trim()}
+                    disabled={loading || !query.trim() || !phone.trim()}
                     className="px-6"
                   >
                     {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
@@ -150,8 +152,9 @@ const MaintenanceTrackingPage = () => {
                 </div>
                 <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1"><FileText className="w-3 h-3" /> رقم الطلب: MR-26-XXXXX</span>
-                  <span className="flex items-center gap-1"><Phone className="w-3 h-3" /> الهاتف: 01xxxxxxxxx</span>
+                  <span className="flex items-center gap-1"><Phone className="w-3 h-3" /> الهاتف المسجل بالطلب</span>
                 </div>
+
               </CardContent>
             </Card>
           </motion.div>

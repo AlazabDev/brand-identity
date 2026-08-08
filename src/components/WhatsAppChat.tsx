@@ -168,32 +168,34 @@ const WhatsAppChat = () => {
   };
 
   const handleQueryRequest = async () => {
-    if (!queryInput.trim()) { toast.error("يرجى إدخال رقم الطلب أو رقم الهاتف"); return; }
+    if (!queryInput.trim() || !queryPhone.trim()) {
+      toast.error("يرجى إدخال رقم الطلب ورقم الهاتف المسجل به");
+      return;
+    }
     setSending(true);
-    const isRequestNum = /^MR-/i.test(queryInput.trim());
     addUserMessage(`🔍 استعلام: ${queryInput}`);
     try {
-      const body = isRequestNum
-        ? { action: "query", request_number: queryInput.trim() }
-        : { action: "query", client_phone: queryInput.trim() };
+      const body = {
+        action: "query",
+        request_number: queryInput.trim(),
+        client_phone: queryPhone.trim(),
+      };
       const { data, error } = await supabase.functions.invoke("maintenance-proxy", { body });
       if (error) throw error;
-      const requests = data?.data?.requests || data?.data || data?.requests || [];
+      const requests = data?.data?.requests || [];
       if (Array.isArray(requests) && requests.length > 0) {
-        const lines = requests.map((r: any) => {
+        const lines = requests.map((r: MaintenanceResult) => {
           const status = STATUS_MAP[r.status] || { label: r.status, emoji: "❓" };
           return `📋 ${r.request_number}\n${status.emoji} الحالة: ${status.label}\n🔧 الخدمة: ${r.service_type || "—"}\n📅 التاريخ: ${r.created_at ? new Date(r.created_at).toLocaleDateString("ar-EG") : "—"}`;
         });
         addBotMessage(`نتائج البحث (${requests.length}):\n\n${lines.join("\n\n─────────\n\n")}`);
         if (notificationsEnabled) showNotification("نتائج البحث", `تم العثور على ${requests.length} طلب(ات)`);
-      } else if (typeof requests === "object" && requests.request_number) {
-        const r = requests;
-        const status = STATUS_MAP[r.status] || { label: r.status, emoji: "❓" };
-        addBotMessage(`📋 طلب: ${r.request_number}\n${status.emoji} الحالة: ${status.label}\n🔧 الخدمة: ${r.service_type || "—"}\n📝 الوصف: ${r.description || "—"}`);
       } else {
         addBotMessage("لم يتم العثور على طلبات بهذه البيانات 🔍");
       }
       setQueryInput("");
+      setQueryPhone("");
+
       setChatMode("main");
     } catch (err) {
       console.error("Query error:", err);

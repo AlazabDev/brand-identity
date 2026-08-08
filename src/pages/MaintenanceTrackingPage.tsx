@@ -54,41 +54,34 @@ const PRIORITY_LABELS: Record<string, { label: string; color: string }> = {
 
 const MaintenanceTrackingPage = () => {
   const [query, setQuery] = useState("");
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<MaintenanceRequest[] | null>(null);
   const [error, setError] = useState("");
 
   const handleSearch = async () => {
     const q = query.trim();
-    if (!q) return;
+    const p = phone.trim();
+    if (!q || !p) return;
     setLoading(true);
     setError("");
     setResults(null);
 
     try {
-      const isRequestNum = /^MR-/i.test(q);
-      const body = isRequestNum
-        ? { action: "query", request_number: q }
-        : { action: "query", client_phone: q };
-
-      const { data, error: fnError } = await supabase.functions.invoke("maintenance-proxy", { body });
+      const { data, error: fnError } = await supabase.functions.invoke("maintenance-proxy", {
+        body: { action: "query", request_number: q, client_phone: p },
+      });
       if (fnError) throw fnError;
 
-      const requests = data?.data?.data || data?.data?.requests || data?.data || [];
-      if (Array.isArray(requests) && requests.length > 0) {
-        setResults(requests);
-      } else if (typeof requests === "object" && requests.request_number) {
-        setResults([requests]);
-      } else {
-        setResults([]);
-      }
-    } catch (err) {
-      console.error("Tracking query error:", err);
+      const requests = data?.data?.requests || [];
+      setResults(Array.isArray(requests) ? requests : []);
+    } catch {
       setError("حدث خطأ في البحث. يرجى المحاولة مرة أخرى.");
     } finally {
       setLoading(false);
     }
   };
+
 
   const getStatusConfig = (status: string) => {
     const key = status?.toLowerCase().replace(/\s/g, "_");

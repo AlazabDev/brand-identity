@@ -76,31 +76,54 @@ serve(async (req) => {
     }
 
     // Action: query - Query maintenance request status
+    // Ownership check: the caller MUST supply BOTH the request number and the
+    // phone number used to create it. Results are only returned when the phone
+    // stored on the request matches the supplied one, which prevents
+    // enumeration of other customers' requests by phone or request number.
     if (action === "query") {
       const { request_number, client_phone } = params;
 
-      if (!request_number && !client_phone) {
+      const normalizePhone = (value: unknown) =>
+        typeof value === "string" ? value.replace(/\D/g, "").replace(/^(0020|20)/, "") : "";
+
+      const reqNum = typeof request_number === "string" ? request_number.trim() : "";
+      const phone = normalizePhone(client_phone);
+
+      if (!/^MR-[A-Za-z0-9-]{3,30}$/.test(reqNum) || phone.length < 8 || phone.length > 15) {
         return new Response(
-          JSON.stringify({ error: "Provide request_number or client_phone" }),
+          JSON.stringify({ error: "Provide a valid request_number and the phone number used for the request" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      const queryParam = request_number
-        ? `request_number=${encodeURIComponent(request_number)}`
-        : `client_phone=${encodeURIComponent(client_phone)}`;
-
-      const res = await fetch(`${MAINTENANCE_API_URL}/query-maintenance-requests?${queryParam}`, {
-        headers: { "x-api-key": MAINTENANCE_API_KEY },
-      });
+      const res = await fetch(
+        `${MAINTENANCE_API_URL}/query-maintenance-requests?request_number=${encodeURIComponent(reqNum)}`,
+        { headers: { "x-api-key": MAINTENANCE_API_KEY } }
+      );
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `API error [${res.status}]`);
+      if (!res.ok) throw new Error(`Maintenance service unavailable [${res.status}]`);
 
-      return new Response(JSON.stringify({ success: true, data }), {
+      const rawList = Array.isArray(data?.data)
+        ? data.data
+        : Array.isArray(data?.requests)
+          ? data.requests
+          : Array.isArray(data)
+            ? data
+            : data?.request_number
+              ? [data]
+              : [];
+
+      const owned = rawList.filter((r: Record<string, unknown>) => {
+        const stored = normalizePhone(r?.client_phone);
+        return stored.length > 0 && (stored.endsWith(phone) || phone.endsWith(stored));
+      });
+
+      return new Response(JSON.stringify({ success: true, data: { requests: owned } }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
 
     return new Response(JSON.stringify({ error: "Invalid action. Use 'create' or 'query'" }), {
       status: 400,

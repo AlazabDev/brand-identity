@@ -95,6 +95,8 @@ const WhatsAppChat = () => {
     client_name: "", client_phone: "", service_type: "", description: "", priority: "medium",
   });
   const [queryInput, setQueryInput] = useState("");
+  const [queryPhone, setQueryPhone] = useState("");
+
   const [unreadCount, setUnreadCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);

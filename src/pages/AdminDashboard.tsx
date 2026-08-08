@@ -309,8 +309,8 @@ const AdminDashboard = () => {
                       </div>
                     </div>
                     <div className="flex gap-1">
-                      <Button size="icon" variant="ghost" onClick={() => editProject(p)}><Edit className="w-4 h-4" /></Button>
-                      <Button size="icon" variant="ghost" className="text-destructive" onClick={() => deleteProject(p.id)}><Trash2 className="w-4 h-4" /></Button>
+                      <Button size="icon" variant="ghost" aria-label="تعديل المشروع" onClick={() => editProject(p)}><Edit className="w-4 h-4" /></Button>
+                      <Button size="icon" variant="ghost" aria-label="حذف المشروع" className="text-destructive" onClick={() => deleteProject(p.id)}><Trash2 className="w-4 h-4" /></Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -373,8 +373,8 @@ const AdminDashboard = () => {
                       <p className="text-xs text-muted-foreground font-body">{p.category} • {new Date(p.created_at).toLocaleDateString("ar")}</p>
                     </div>
                     <div className="flex gap-1">
-                      <Button size="icon" variant="ghost" onClick={() => editPost(p)}><Edit className="w-4 h-4" /></Button>
-                      <Button size="icon" variant="ghost" className="text-destructive" onClick={() => deletePost(p.id)}><Trash2 className="w-4 h-4" /></Button>
+                      <Button size="icon" variant="ghost" aria-label="تعديل المقال" onClick={() => editPost(p)}><Edit className="w-4 h-4" /></Button>
+                      <Button size="icon" variant="ghost" aria-label="حذف المقال" className="text-destructive" onClick={() => deletePost(p.id)}><Trash2 className="w-4 h-4" /></Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -402,10 +402,10 @@ const AdminDashboard = () => {
                         <p className="text-xs text-muted-foreground mt-2">{new Date(c.created_at).toLocaleString("ar")}</p>
                       </div>
                       <div className="flex gap-1 mr-4">
-                        <Button size="icon" variant="ghost" onClick={() => markRead("contact_messages", c.id, c.read)}>
+                        <Button size="icon" variant="ghost" aria-label={c.read ? "تعليم كغير مقروء" : "تعليم كمقروء"} onClick={() => markRead("contact_messages", c.id, c.read)}>
                           {c.read ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4 text-accent" />}
                         </Button>
-                        <Button size="icon" variant="ghost" className="text-destructive" onClick={() => deleteMessage("contact_messages", c.id)}>
+                        <Button size="icon" variant="ghost" aria-label="حذف الرسالة" className="text-destructive" onClick={() => deleteMessage("contact_messages", c.id)}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -447,10 +447,10 @@ const AdminDashboard = () => {
                         <p className="text-xs text-muted-foreground mt-2">{new Date(q.created_at).toLocaleString("ar")}</p>
                       </div>
                       <div className="flex gap-1 mr-4">
-                        <Button size="icon" variant="ghost" onClick={() => markRead("quote_requests", q.id, q.read)}>
+                        <Button size="icon" variant="ghost" aria-label={q.read ? "تعليم كغير مقروء" : "تعليم كمقروء"} onClick={() => markRead("quote_requests", q.id, q.read)}>
                           {q.read ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4 text-accent" />}
                         </Button>
-                        <Button size="icon" variant="ghost" className="text-destructive" onClick={() => deleteMessage("quote_requests", q.id)}>
+                        <Button size="icon" variant="ghost" aria-label="حذف الطلب" className="text-destructive" onClick={() => deleteMessage("quote_requests", q.id)}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>

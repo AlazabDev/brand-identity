@@ -96,6 +96,13 @@ const WhatsAppChat = () => {
   });
   const [queryInput, setQueryInput] = useState("");
   const [queryPhone, setQueryPhone] = useState("");
+  type MaintenanceResult = {
+    request_number?: string;
+    status: string;
+    service_type?: string;
+    created_at?: string;
+  };
+
 
   const [unreadCount, setUnreadCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);

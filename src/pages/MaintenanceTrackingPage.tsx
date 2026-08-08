@@ -110,7 +110,7 @@ const MaintenanceTrackingPage = () => {
               تتبع طلبات الصيانة
             </h1>
             <p className="text-muted-foreground text-lg">
-              أدخل رقم الطلب أو رقم هاتفك لمعرفة حالة طلبك
+              أدخل رقم الطلب ورقم الهاتف المستخدم عند إنشاء الطلب
             </p>
           </motion.div>
 
@@ -122,19 +122,28 @@ const MaintenanceTrackingPage = () => {
           >
             <Card className="mb-8 border-border/50 shadow-lg">
               <CardContent className="p-6">
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <Input
                     type="text"
-                    placeholder="رقم الطلب (MR-26-XXXXX) أو رقم الهاتف (01xxxxxxxxx)"
+                    placeholder="رقم الطلب (MR-26-XXXXX)"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                     className="flex-1 text-base"
                     dir="ltr"
                   />
+                  <Input
+                    type="tel"
+                    placeholder="رقم الهاتف (01xxxxxxxxx)"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                    className="flex-1 text-base"
+                    dir="ltr"
+                  />
                   <Button
                     onClick={handleSearch}
-                    disabled={loading || !query.trim()}
+                    disabled={loading || !query.trim() || !phone.trim()}
                     className="px-6"
                   >
                     {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
@@ -143,8 +152,9 @@ const MaintenanceTrackingPage = () => {
                 </div>
                 <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1"><FileText className="w-3 h-3" /> رقم الطلب: MR-26-XXXXX</span>
-                  <span className="flex items-center gap-1"><Phone className="w-3 h-3" /> الهاتف: 01xxxxxxxxx</span>
+                  <span className="flex items-center gap-1"><Phone className="w-3 h-3" /> الهاتف المسجل بالطلب</span>
                 </div>
+
               </CardContent>
             </Card>
           </motion.div>

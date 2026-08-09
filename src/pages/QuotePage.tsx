@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingButtons from "@/components/FloatingButtons";
 import PageMeta from "@/components/PageMeta";
 import PageTransition from "@/components/PageTransition";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, CheckCircle, Loader2, MessageCircle, FileText } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle, Loader2, MessageCircle, FileText, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { quoteSchema, firstZodError } from "@/lib/validation";
@@ -62,12 +62,64 @@ const buildWhatsAppUrl = (data: QuoteData): string => {
   return `https://wa.me/201004006620?text=${encodeURIComponent(text)}`;
 };
 
+interface Attachment {
+  name: string;
+  url: string;
+}
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
 const QuotePage = () => {
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [data, setData] = useState<QuoteData>(initialData);
   const [whatsAppUrl, setWhatsAppUrl] = useState<string | null>(null);
   const [lastSubmittedAt, setLastSubmittedAt] = useState<number>(0);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleFilesSelected = async (e: ChangeEvent<HTMLInputElement>) => {
+    const files: File[] = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+
+    setUploading(true);
+    const uploaded: Attachment[] = [];
+
+    for (const file of files) {
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`الملف ${file.name} أكبر من 5 ميجابايت`);
+        continue;
+      }
+
+      const ext = file.name.split(".").pop() || "bin";
+      const path = `quotes/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+      const { data: uploadData, error } = await supabase.storage
+        .from("chat-files")
+        .upload(path, file, { contentType: file.type });
+
+      if (error || !uploadData) {
+        toast.error(`تعذر رفع الملف ${file.name}`);
+        continue;
+      }
+
+      const { data: urlData } = await supabase.storage
+        .from("chat-files")
+        .createSignedUrl(uploadData.path, 60 * 60 * 24 * 30);
+
+      if (urlData) uploaded.push({ name: file.name, url: urlData.signedUrl });
+    }
+
+    setAttachments((prev) => [...prev, ...uploaded]);
+    setUploading(false);
+    e.target.value = "";
+    if (uploaded.length > 0) toast.success(`تم رفع ${uploaded.length} ملف`);
+  };
+
+  const removeAttachment = (url: string) => {
+    setAttachments((prev) => prev.filter((f) => f.url !== url));
+  };
 
   const toggleService = (s: string) => {
     setData((d) => ({
@@ -75,6 +127,7 @@ const QuotePage = () => {
       services: d.services.includes(s) ? d.services.filter((x) => x !== s) : [...d.services, s],
     }));
   };
+
 
   const handleSubmit = async () => {
     if (submitting) return;
@@ -103,7 +156,10 @@ const QuotePage = () => {
         services: v.services.length > 0 ? v.services : null,
         budget: v.budget || null,
         opening_date: v.openingDate || null,
-        notes: v.notes || null,
+        notes:
+          [v.notes, attachments.length > 0 ? `المرفقات:\n${attachments.map((f) => `${f.name}: ${f.url}`).join("\n")}` : ""]
+            .filter(Boolean)
+            .join("\n\n") || null,
       });
 
       if (error) throw error;
@@ -111,8 +167,8 @@ const QuotePage = () => {
       toast.success("تم إرسال طلب عرض السعر بنجاح! سنتواصل معك خلال 24 ساعة");
       setWhatsAppUrl(buildWhatsAppUrl(data));
       setLastSubmittedAt(Date.now());
-      setStep(0);
-      setData(initialData);
+      setSubmitted(true);
+
     } catch (err) {
       console.error("Error submitting quote:", err);
       toast.error("حدث خطأ أثناء الإرسال. حاول مرة أخرى");
@@ -152,7 +208,40 @@ const QuotePage = () => {
 
           <section className="section-padding bg-background">
             <div className="container-custom max-w-3xl">
-              <div className="flex items-center justify-between mb-12 overflow-x-auto pb-4">
+              {submitted && (
+                <div className="card-elevated p-8 text-center space-y-4">
+                  <CheckCircle className="w-14 h-14 text-accent mx-auto" />
+                  <h2 className="font-display font-bold text-2xl text-foreground">تم استلام طلبك بنجاح</h2>
+                  <p className="font-body text-muted-foreground">
+                    شكراً لك، وصلنا طلب عرض السعر الخاص بـ «{data.shopName || data.clientName}». سيتواصل معك فريقنا خلال 24 ساعة عمل.
+                  </p>
+                  {attachments.length > 0 && (
+                    <p className="font-body text-sm text-muted-foreground">تم إرفاق {attachments.length} ملف مع الطلب.</p>
+                  )}
+                  <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                    {whatsAppUrl && (
+                      <a href={whatsAppUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-accent text-accent-foreground font-display font-bold text-sm">
+                        <MessageCircle className="w-4 h-4" /> إرسال نسخة عبر واتساب
+                      </a>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSubmitted(false);
+                        setStep(0);
+                        setData(initialData);
+                        setAttachments([]);
+                        setWhatsAppUrl(null);
+                      }}
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-border text-foreground font-display font-bold text-sm hover:bg-muted transition-colors"
+                    >
+                      إرسال طلب جديد
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className={`flex items-center justify-between mb-12 overflow-x-auto pb-4 ${submitted ? "hidden" : ""}`}>
                 {steps.map((s, i) => (
                   <div key={s} className="flex items-center">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-display font-bold shrink-0 transition-colors ${
@@ -167,8 +256,9 @@ const QuotePage = () => {
                 ))}
               </div>
 
-              <div className="card-elevated p-8">
+              <div className={`card-elevated p-8 ${submitted ? "hidden" : ""}`}>
                 <h2 className="font-display font-bold text-xl text-foreground mb-6">{steps[step]}</h2>
+
 
                 {step === 0 && (
                   <div className="space-y-4">
@@ -226,12 +316,43 @@ const QuotePage = () => {
                   <div className="space-y-4">
                     <div className="flex items-center gap-3 text-muted-foreground">
                       <FileText className="w-5 h-5 text-accent" />
-                      <p className="font-body text-sm">أضف أي ملاحظات أو متطلبات خاصة. لإرفاق صور أو مخططات يرجى مراسلتنا عبر واتساب بعد الإرسال.</p>
+                      <p className="font-body text-sm">أضف أي ملاحظات أو متطلبات خاصة، ويمكنك إرفاق صور أو مخططات (PDF أو صور، حتى 5 ميجابايت لكل ملف).</p>
                     </div>
                     <textarea placeholder="ملاحظات إضافية..." rows={6} maxLength={2000} value={data.notes} onChange={(e) => setData({ ...data, notes: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 resize-none" />
                     <p className="text-xs text-muted-foreground text-left" dir="ltr">{data.notes.length}/2000</p>
+
+                    <div className="rounded-lg border border-dashed border-border p-4 space-y-3">
+                      <label htmlFor="quote-files" className="block text-sm font-body text-foreground">إرفاق ملفات (اختياري)</label>
+                      <input
+                        id="quote-files"
+                        type="file"
+                        multiple
+                        accept="image/*,.pdf"
+                        onChange={handleFilesSelected}
+                        disabled={uploading}
+                        className="block w-full text-sm font-body text-muted-foreground file:ml-3 file:rounded-lg file:border-0 file:bg-accent file:px-4 file:py-2 file:text-accent-foreground file:font-body disabled:opacity-50"
+                      />
+                      {uploading && (
+                        <p className="flex items-center gap-2 text-sm text-muted-foreground font-body">
+                          <Loader2 className="w-4 h-4 animate-spin" /> جارٍ رفع الملفات...
+                        </p>
+                      )}
+                      {attachments.length > 0 && (
+                        <ul className="space-y-2">
+                          {attachments.map((f) => (
+                            <li key={f.url} className="flex items-center justify-between gap-3 rounded-lg bg-muted/50 px-3 py-2 text-sm font-body">
+                              <span className="truncate text-foreground">{f.name}</span>
+                              <button type="button" onClick={() => removeAttachment(f.url)} className="text-muted-foreground hover:text-destructive transition-colors" aria-label={`إزالة الملف ${f.name}`}>
+                                <X className="w-4 h-4" />
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
                   </div>
                 )}
+
 
                 {step === 5 && (
                   <div className="space-y-4">
@@ -245,6 +366,7 @@ const QuotePage = () => {
                       {data.services.length > 0 && <p><strong className="text-foreground">الخدمات:</strong> <span className="text-muted-foreground">{data.services.join("، ")}</span></p>}
                       {data.budget && <p><strong className="text-foreground">الميزانية:</strong> <span className="text-muted-foreground">{data.budget}</span></p>}
                       {data.openingDate && <p><strong className="text-foreground">الافتتاح:</strong> <span className="text-muted-foreground">{data.openingDate}</span></p>}
+                      {attachments.length > 0 && <p><strong className="text-foreground">المرفقات:</strong> <span className="text-muted-foreground">{attachments.map((f) => f.name).join("، ")}</span></p>}
                     </div>
                     {whatsAppUrl && (
                       <a

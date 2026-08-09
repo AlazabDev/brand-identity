@@ -62,12 +62,64 @@ const buildWhatsAppUrl = (data: QuoteData): string => {
   return `https://wa.me/201004006620?text=${encodeURIComponent(text)}`;
 };
 
+interface Attachment {
+  name: string;
+  url: string;
+}
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
 const QuotePage = () => {
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [data, setData] = useState<QuoteData>(initialData);
   const [whatsAppUrl, setWhatsAppUrl] = useState<string | null>(null);
   const [lastSubmittedAt, setLastSubmittedAt] = useState<number>(0);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleFilesSelected = async (e: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+
+    setUploading(true);
+    const uploaded: Attachment[] = [];
+
+    for (const file of files) {
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`الملف ${file.name} أكبر من 5 ميجابايت`);
+        continue;
+      }
+
+      const ext = file.name.split(".").pop() || "bin";
+      const path = `quotes/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+      const { data: uploadData, error } = await supabase.storage
+        .from("chat-files")
+        .upload(path, file, { contentType: file.type });
+
+      if (error || !uploadData) {
+        toast.error(`تعذر رفع الملف ${file.name}`);
+        continue;
+      }
+
+      const { data: urlData } = await supabase.storage
+        .from("chat-files")
+        .createSignedUrl(uploadData.path, 60 * 60 * 24 * 30);
+
+      if (urlData) uploaded.push({ name: file.name, url: urlData.signedUrl });
+    }
+
+    setAttachments((prev) => [...prev, ...uploaded]);
+    setUploading(false);
+    e.target.value = "";
+    if (uploaded.length > 0) toast.success(`تم رفع ${uploaded.length} ملف`);
+  };
+
+  const removeAttachment = (url: string) => {
+    setAttachments((prev) => prev.filter((f) => f.url !== url));
+  };
 
   const toggleService = (s: string) => {
     setData((d) => ({
@@ -75,6 +127,7 @@ const QuotePage = () => {
       services: d.services.includes(s) ? d.services.filter((x) => x !== s) : [...d.services, s],
     }));
   };
+
 
   const handleSubmit = async () => {
     if (submitting) return;

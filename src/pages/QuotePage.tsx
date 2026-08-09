@@ -366,6 +366,7 @@ const QuotePage = () => {
                       {data.services.length > 0 && <p><strong className="text-foreground">الخدمات:</strong> <span className="text-muted-foreground">{data.services.join("، ")}</span></p>}
                       {data.budget && <p><strong className="text-foreground">الميزانية:</strong> <span className="text-muted-foreground">{data.budget}</span></p>}
                       {data.openingDate && <p><strong className="text-foreground">الافتتاح:</strong> <span className="text-muted-foreground">{data.openingDate}</span></p>}
+                      {attachments.length > 0 && <p><strong className="text-foreground">المرفقات:</strong> <span className="text-muted-foreground">{attachments.map((f) => f.name).join("، ")}</span></p>}
                     </div>
                     {whatsAppUrl && (
                       <a

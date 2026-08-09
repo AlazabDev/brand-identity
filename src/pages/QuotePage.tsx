@@ -80,7 +80,7 @@ const QuotePage = () => {
   const [submitted, setSubmitted] = useState(false);
 
   const handleFilesSelected = async (e: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? []);
+    const files: File[] = Array.from(e.target.files ?? []);
     if (files.length === 0) return;
 
     setUploading(true);

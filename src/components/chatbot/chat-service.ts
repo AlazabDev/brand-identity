@@ -75,7 +75,12 @@ export async function textToSpeech(text: string): Promise<string> {
 
 export async function speechToText(audioBlob: Blob): Promise<string> {
   const formData = new FormData();
-  formData.append("audio", audioBlob, "recording.webm");
+  const ext = audioBlob.type.includes("mp4") || audioBlob.type.includes("aac")
+    ? "m4a"
+    : audioBlob.type.includes("ogg")
+      ? "ogg"
+      : "webm";
+  formData.append("audio", audioBlob, `recording.${ext}`);
 
   const response = await fetch(STT_URL, {
     method: "POST",

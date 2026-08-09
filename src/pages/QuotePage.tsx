@@ -156,7 +156,10 @@ const QuotePage = () => {
         services: v.services.length > 0 ? v.services : null,
         budget: v.budget || null,
         opening_date: v.openingDate || null,
-        notes: v.notes || null,
+        notes:
+          [v.notes, attachments.length > 0 ? `المرفقات:\n${attachments.map((f) => `${f.name}: ${f.url}`).join("\n")}` : ""]
+            .filter(Boolean)
+            .join("\n\n") || null,
       });
 
       if (error) throw error;
@@ -164,8 +167,8 @@ const QuotePage = () => {
       toast.success("تم إرسال طلب عرض السعر بنجاح! سنتواصل معك خلال 24 ساعة");
       setWhatsAppUrl(buildWhatsAppUrl(data));
       setLastSubmittedAt(Date.now());
-      setStep(0);
-      setData(initialData);
+      setSubmitted(true);
+
     } catch (err) {
       console.error("Error submitting quote:", err);
       toast.error("حدث خطأ أثناء الإرسال. حاول مرة أخرى");

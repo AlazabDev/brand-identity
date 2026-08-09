@@ -208,7 +208,40 @@ const QuotePage = () => {
 
           <section className="section-padding bg-background">
             <div className="container-custom max-w-3xl">
-              <div className="flex items-center justify-between mb-12 overflow-x-auto pb-4">
+              {submitted && (
+                <div className="card-elevated p-8 text-center space-y-4">
+                  <CheckCircle className="w-14 h-14 text-accent mx-auto" />
+                  <h2 className="font-display font-bold text-2xl text-foreground">تم استلام طلبك بنجاح</h2>
+                  <p className="font-body text-muted-foreground">
+                    شكراً لك، وصلنا طلب عرض السعر الخاص بـ «{data.shopName || data.clientName}». سيتواصل معك فريقنا خلال 24 ساعة عمل.
+                  </p>
+                  {attachments.length > 0 && (
+                    <p className="font-body text-sm text-muted-foreground">تم إرفاق {attachments.length} ملف مع الطلب.</p>
+                  )}
+                  <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                    {whatsAppUrl && (
+                      <a href={whatsAppUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-accent text-accent-foreground font-display font-bold text-sm">
+                        <MessageCircle className="w-4 h-4" /> إرسال نسخة عبر واتساب
+                      </a>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSubmitted(false);
+                        setStep(0);
+                        setData(initialData);
+                        setAttachments([]);
+                        setWhatsAppUrl(null);
+                      }}
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-border text-foreground font-display font-bold text-sm hover:bg-muted transition-colors"
+                    >
+                      إرسال طلب جديد
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className={`flex items-center justify-between mb-12 overflow-x-auto pb-4 ${submitted ? "hidden" : ""}`}>
                 {steps.map((s, i) => (
                   <div key={s} className="flex items-center">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-display font-bold shrink-0 transition-colors ${
@@ -223,8 +256,9 @@ const QuotePage = () => {
                 ))}
               </div>
 
-              <div className="card-elevated p-8">
+              <div className={`card-elevated p-8 ${submitted ? "hidden" : ""}`}>
                 <h2 className="font-display font-bold text-xl text-foreground mb-6">{steps[step]}</h2>
+
 
                 {step === 0 && (
                   <div className="space-y-4">

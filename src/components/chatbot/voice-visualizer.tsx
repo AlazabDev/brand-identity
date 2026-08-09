@@ -43,7 +43,7 @@ export const VoiceVisualizer = ({
     let audioCtx: AudioContext | null = null;
     let analyser: AnalyserNode | null = null;
     let source: MediaStreamAudioSourceNode | MediaElementAudioSourceNode | null = null;
-    let data: Uint8Array | null = null;
+    let data: Uint8Array<ArrayBuffer> | null = null;
 
     const setupAnalyser = () => {
       try {
@@ -65,7 +65,7 @@ export const VoiceVisualizer = ({
         analyser.smoothingTimeConstant = 0.8;
         source.connect(analyser);
         if (audioElement && audioCtx) analyser.connect(audioCtx.destination);
-        data = new Uint8Array(analyser.frequencyBinCount);
+        data = new Uint8Array(new ArrayBuffer(analyser.frequencyBinCount));
       } catch {
         analyser = null;
       }

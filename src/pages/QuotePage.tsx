@@ -5,7 +5,7 @@ import FloatingButtons from "@/components/FloatingButtons";
 import PageMeta from "@/components/PageMeta";
 import PageTransition from "@/components/PageTransition";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, CheckCircle, Loader2, MessageCircle, FileText } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle, Loader2, MessageCircle, FileText, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { quoteSchema, firstZodError } from "@/lib/validation";

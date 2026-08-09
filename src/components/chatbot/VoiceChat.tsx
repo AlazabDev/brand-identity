@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Mic, MicOff, Loader2, Square, Trash2, Volume2 } from "lucide-react";
 import { speechToText, textToSpeech } from "./chat-service";
+import { VoiceVisualizer } from "./voice-visualizer";
 import { ChatMessage } from "./types";
 
 interface VoiceChatProps {
@@ -16,6 +17,7 @@ export const VoiceChat = ({ onTranscriptMessage, messages, isLoading }: VoiceCha
   const [duration, setDuration] = useState(0);
   const [error, setError] = useState("");
   const [lastTranscript, setLastTranscript] = useState("");
+  const [micStream, setMicStream] = useState<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -32,16 +34,44 @@ export const VoiceChat = ({ onTranscriptMessage, messages, isLoading }: VoiceCha
         audioRef.current.pause();
         audioRef.current = null;
       }
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
     };
   }, []);
+
+  const pickMimeType = (): string | undefined => {
+    const candidates = [
+      "audio/webm;codecs=opus",
+      "audio/webm",
+      "audio/ogg;codecs=opus",
+      "audio/mp4",
+    ];
+    if (typeof MediaRecorder === "undefined") return undefined;
+    return candidates.find((type) => MediaRecorder.isTypeSupported(type));
+  };
 
   const startRecording = useCallback(async () => {
     setError("");
     setLastTranscript("");
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError("متصفحك لا يدعم تسجيل الصوت. جرّب متصفحاً حديثاً أو استخدم المحادثة النصية.");
+      return;
+    }
+    if (!window.isSecureContext) {
+      setError("تسجيل الصوت يتطلب اتصالاً آمناً (HTTPS).");
+      return;
+    }
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      });
       streamRef.current = stream;
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      setMicStream(stream);
+
+      const mimeType = pickMimeType();
+      const mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
@@ -52,10 +82,15 @@ export const VoiceChat = ({ onTranscriptMessage, messages, isLoading }: VoiceCha
       mediaRecorder.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
         streamRef.current = null;
+        setMicStream(null);
         if (timerRef.current) clearInterval(timerRef.current);
 
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-        if (blob.size === 0) return;
+        const blob = new Blob(chunksRef.current, { type: mediaRecorder.mimeType || "audio/webm" });
+        if (blob.size < 1000) {
+          setError("التسجيل قصير جداً، حاول التحدث لثانية على الأقل.");
+          setDuration(0);
+          return;
+        }
 
         setIsProcessing(true);
         try {
@@ -64,22 +99,35 @@ export const VoiceChat = ({ onTranscriptMessage, messages, isLoading }: VoiceCha
             setLastTranscript(text);
             onTranscriptMessage(text);
           } else {
-            setError("لم يتم التعرف على كلام");
+            setError("لم يتم التعرف على كلام، حاول مرة أخرى.");
           }
         } catch {
-          setError("فشل تحويل الصوت لنص");
+          setError("فشل تحويل الصوت لنص، حاول مرة أخرى.");
         } finally {
           setIsProcessing(false);
           setDuration(0);
         }
       };
 
-      mediaRecorder.start();
+      mediaRecorder.start(250);
       setIsRecording(true);
       setDuration(0);
       timerRef.current = setInterval(() => setDuration((prev) => prev + 1), 1000);
-    } catch {
-      setError("لا يمكن الوصول للميكروفون");
+    } catch (err) {
+      const name = err instanceof DOMException ? err.name : "";
+      if (name === "NotAllowedError" || name === "SecurityError") {
+        setError("تم رفض إذن الميكروفون. فعّل الإذن من إعدادات المتصفح ثم أعد المحاولة.");
+      } else if (name === "NotFoundError" || name === "DevicesNotFoundError") {
+        setError("لم يتم العثور على ميكروفون متصل بالجهاز.");
+      } else if (name === "NotReadableError") {
+        setError("الميكروفون مستخدم من تطبيق آخر. أغلقه ثم أعد المحاولة.");
+      } else {
+        setError("تعذّر الوصول للميكروفون، حاول مرة أخرى.");
+      }
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+      setMicStream(null);
+      setIsRecording(false);
     }
   }, [onTranscriptMessage]);
 
@@ -94,6 +142,7 @@ export const VoiceChat = ({ onTranscriptMessage, messages, isLoading }: VoiceCha
       mediaRecorderRef.current.onstop = () => {
         streamRef.current?.getTracks().forEach((t) => t.stop());
         streamRef.current = null;
+        setMicStream(null);
       };
       mediaRecorderRef.current.stop();
       setIsRecording(false);
@@ -123,7 +172,7 @@ export const VoiceChat = ({ onTranscriptMessage, messages, isLoading }: VoiceCha
       await audio.play();
     } catch {
       setIsPlayingTTS(false);
-      setError("فشل تشغيل الصوت");
+      setError("تعذّر تشغيل الرد صوتياً، حاول مرة أخرى.");
     }
   }, [lastAssistantMsg, isPlayingTTS]);
 
@@ -147,39 +196,55 @@ export const VoiceChat = ({ onTranscriptMessage, messages, isLoading }: VoiceCha
       <div className="text-center space-y-2">
         {isProcessing ? (
           <>
-            <div className="w-20 h-20 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-              <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            <div className="relative w-32 h-32 mx-auto flex items-center justify-center">
+              <VoiceVisualizer simulated size={128} className="absolute inset-0" />
+              <Loader2 className="w-8 h-8 text-primary animate-spin relative" />
             </div>
             <p className="text-sm text-muted-foreground">جاري تحويل الصوت لنص...</p>
           </>
         ) : isRecording ? (
           <>
-            <div className="w-20 h-20 mx-auto rounded-full bg-destructive/10 flex items-center justify-center animate-pulse">
-              <Mic className="w-8 h-8 text-destructive" />
+            <div className="relative w-32 h-32 mx-auto flex items-center justify-center">
+              <VoiceVisualizer
+                stream={micStream}
+                size={128}
+                color="hsl(var(--destructive))"
+                className="absolute inset-0"
+              />
+              <Mic className="w-8 h-8 text-destructive relative" />
             </div>
             <p className="text-lg font-bold text-foreground font-display">{formatDuration(duration)}</p>
             <p className="text-sm text-muted-foreground">جاري التسجيل... تحدث الآن</p>
           </>
         ) : isLoading ? (
           <>
-            <div className="w-20 h-20 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-              <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            <div className="relative w-32 h-32 mx-auto flex items-center justify-center">
+              <VoiceVisualizer simulated size={128} className="absolute inset-0" />
+              <Loader2 className="w-8 h-8 text-primary animate-spin relative" />
             </div>
             <p className="text-sm text-muted-foreground">عزبوت يفكر...</p>
           </>
         ) : (
           <>
-            <div className="w-20 h-20 mx-auto rounded-full bg-muted flex items-center justify-center">
-              <Mic className="w-8 h-8 text-muted-foreground" />
+            <div className="relative w-32 h-32 mx-auto flex items-center justify-center">
+              {isPlayingTTS && <VoiceVisualizer simulated size={128} className="absolute inset-0" />}
+              <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center relative">
+                <Mic className="w-8 h-8 text-muted-foreground" />
+              </div>
             </div>
-            <p className="text-sm text-muted-foreground">اضغط للتحدث مع عزبوت</p>
+            <p className="text-sm text-muted-foreground">
+              {isPlayingTTS ? "عزبوت يتحدث..." : "اضغط للتحدث مع عزبوت"}
+            </p>
           </>
         )}
       </div>
 
       {/* Error */}
       {error && (
-        <div className="text-xs text-destructive bg-destructive/10 rounded-lg px-4 py-2 text-center">
+        <div
+          role="alert"
+          className="text-xs text-destructive bg-destructive/10 rounded-lg px-4 py-2 text-center max-w-xs"
+        >
           {error}
         </div>
       )}

@@ -226,12 +226,43 @@ const QuotePage = () => {
                   <div className="space-y-4">
                     <div className="flex items-center gap-3 text-muted-foreground">
                       <FileText className="w-5 h-5 text-accent" />
-                      <p className="font-body text-sm">أضف أي ملاحظات أو متطلبات خاصة. لإرفاق صور أو مخططات يرجى مراسلتنا عبر واتساب بعد الإرسال.</p>
+                      <p className="font-body text-sm">أضف أي ملاحظات أو متطلبات خاصة، ويمكنك إرفاق صور أو مخططات (PDF أو صور، حتى 5 ميجابايت لكل ملف).</p>
                     </div>
                     <textarea placeholder="ملاحظات إضافية..." rows={6} maxLength={2000} value={data.notes} onChange={(e) => setData({ ...data, notes: e.target.value })} className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 resize-none" />
                     <p className="text-xs text-muted-foreground text-left" dir="ltr">{data.notes.length}/2000</p>
+
+                    <div className="rounded-lg border border-dashed border-border p-4 space-y-3">
+                      <label htmlFor="quote-files" className="block text-sm font-body text-foreground">إرفاق ملفات (اختياري)</label>
+                      <input
+                        id="quote-files"
+                        type="file"
+                        multiple
+                        accept="image/*,.pdf"
+                        onChange={handleFilesSelected}
+                        disabled={uploading}
+                        className="block w-full text-sm font-body text-muted-foreground file:ml-3 file:rounded-lg file:border-0 file:bg-accent file:px-4 file:py-2 file:text-accent-foreground file:font-body disabled:opacity-50"
+                      />
+                      {uploading && (
+                        <p className="flex items-center gap-2 text-sm text-muted-foreground font-body">
+                          <Loader2 className="w-4 h-4 animate-spin" /> جارٍ رفع الملفات...
+                        </p>
+                      )}
+                      {attachments.length > 0 && (
+                        <ul className="space-y-2">
+                          {attachments.map((f) => (
+                            <li key={f.url} className="flex items-center justify-between gap-3 rounded-lg bg-muted/50 px-3 py-2 text-sm font-body">
+                              <span className="truncate text-foreground">{f.name}</span>
+                              <button type="button" onClick={() => removeAttachment(f.url)} className="text-muted-foreground hover:text-destructive transition-colors" aria-label={`إزالة الملف ${f.name}`}>
+                                <X className="w-4 h-4" />
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
                   </div>
                 )}
+
 
                 {step === 5 && (
                   <div className="space-y-4">

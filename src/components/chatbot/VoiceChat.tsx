@@ -239,7 +239,7 @@ export const VoiceChat = ({ onTranscriptMessage, messages, isLoading }: VoiceCha
       </p>
 
       {/* Status */}
-      <div className="text-center space-y-2">
+      <div className="text-center space-y-2" aria-hidden="true">
         {isProcessing ? (
           <>
             <div className="relative w-32 h-32 mx-auto flex items-center justify-center">
@@ -284,6 +284,7 @@ export const VoiceChat = ({ onTranscriptMessage, messages, isLoading }: VoiceCha
           </>
         )}
       </div>
+
 
       {/* Error */}
       {error && (

@@ -298,7 +298,11 @@ export const VoiceChat = ({ onTranscriptMessage, messages, isLoading }: VoiceCha
 
       {/* Last transcript */}
       {lastTranscript && !isRecording && !isProcessing && (
-        <div className="w-full bg-muted rounded-xl p-3 text-sm text-foreground text-center">
+        <div
+          className="w-full bg-muted rounded-xl p-3 text-sm text-foreground text-center"
+          role="status"
+          aria-live="polite"
+        >
           <p className="text-[10px] text-muted-foreground mb-1">ما قلته:</p>
           <p>"{lastTranscript}"</p>
         </div>
@@ -306,46 +310,58 @@ export const VoiceChat = ({ onTranscriptMessage, messages, isLoading }: VoiceCha
 
       {/* Last assistant response */}
       {lastAssistantMsg && !isRecording && !isProcessing && !isLoading && (
-        <div className="w-full bg-primary/5 border border-primary/20 rounded-xl p-3 text-sm text-foreground text-center max-h-32 overflow-y-auto">
+        <div
+          className="w-full bg-primary/5 border border-primary/20 rounded-xl p-3 text-sm text-foreground text-center max-h-32 overflow-y-auto"
+          role="status"
+          aria-live="polite"
+          tabIndex={0}
+        >
           <p className="text-[10px] text-primary mb-1">رد عزبوت:</p>
           <p className="line-clamp-4">{lastAssistantMsg.content}</p>
         </div>
       )}
 
       {/* Controls */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4" role="group" aria-label="أدوات التحكم في التسجيل الصوتي">
         {isRecording ? (
           <>
             <button
+              type="button"
               onClick={cancelRecording}
-              className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-destructive hover:bg-destructive/10 transition-colors"
-              aria-label="إلغاء التسجيل"
+              className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-destructive hover:bg-destructive/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              aria-label="إلغاء التسجيل (Escape)"
             >
-              <Trash2 className="w-5 h-5" />
+              <Trash2 className="w-5 h-5" aria-hidden="true" />
             </button>
             <button
+              type="button"
               onClick={stopRecording}
-              className="w-16 h-16 rounded-full bg-destructive text-white flex items-center justify-center hover:bg-destructive/90 transition-colors shadow-lg"
-              aria-label="إيقاف التسجيل"
+              aria-pressed={true}
+              className="w-16 h-16 rounded-full bg-destructive text-white flex items-center justify-center hover:bg-destructive/90 transition-colors shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              aria-label="إيقاف التسجيل (مسافة)"
             >
-              <Square className="w-6 h-6 fill-current" />
+              <Square className="w-6 h-6 fill-current" aria-hidden="true" />
             </button>
           </>
         ) : (
           <>
             <button
+              type="button"
               onClick={startRecording}
               disabled={isProcessing || isLoading}
-              className="w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 disabled:opacity-50 transition-colors shadow-lg"
-              aria-label="بدء التسجيل"
+              aria-pressed={false}
+              className="w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 disabled:opacity-50 transition-colors shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              aria-label="بدء التسجيل (مسافة)"
             >
-              <Mic className="w-7 h-7" />
+              <Mic className="w-7 h-7" aria-hidden="true" />
             </button>
             {lastAssistantMsg && (
               <button
+                type="button"
                 onClick={isPlayingTTS ? stopTTS : playLastResponse}
                 disabled={isLoading || isProcessing}
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+                aria-pressed={isPlayingTTS}
+                className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
                   isPlayingTTS
                     ? "bg-primary/20 text-primary"
                     : "bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary"
@@ -353,9 +369,9 @@ export const VoiceChat = ({ onTranscriptMessage, messages, isLoading }: VoiceCha
                 aria-label={isPlayingTTS ? "إيقاف الصوت" : "تشغيل الرد صوتياً"}
               >
                 {isPlayingTTS ? (
-                  <Square className="w-4 h-4 fill-current" />
+                  <Square className="w-4 h-4 fill-current" aria-hidden="true" />
                 ) : (
-                  <Volume2 className="w-5 h-5" />
+                  <Volume2 className="w-5 h-5" aria-hidden="true" />
                 )}
               </button>
             )}
@@ -366,6 +382,10 @@ export const VoiceChat = ({ onTranscriptMessage, messages, isLoading }: VoiceCha
       <p className="text-[10px] text-muted-foreground text-center">
         مدعوم بالذكاء الاصطناعي - قد يخطئ أحياناً
       </p>
+      <p className="sr-only">
+        اختصارات لوحة المفاتيح: مفتاح المسافة لبدء أو إيقاف التسجيل، ومفتاح Escape لإلغاء التسجيل الجاري.
+      </p>
     </div>
   );
+
 };

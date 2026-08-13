@@ -130,6 +130,13 @@ export const VoiceRecorder = ({ onTranscript, disabled }: VoiceRecorderProps) =>
     return `${m}:${s}`;
   };
 
+  // Status text announced to screen readers
+  const statusText = isProcessing
+    ? "جاري تحويل الصوت إلى نص"
+    : isRecording
+      ? `جاري التسجيل، المدة ${formatDuration(duration)}${isMuted ? "، الميكروفون صامت" : ""}`
+      : "التسجيل متوقف";
+
   // Simple toggle button when collapsed
   if (!expanded) {
     return (
@@ -137,22 +144,43 @@ export const VoiceRecorder = ({ onTranscript, disabled }: VoiceRecorderProps) =>
         type="button"
         onClick={() => setExpanded(true)}
         disabled={disabled}
-        className="w-10 h-10 rounded-xl bg-muted text-muted-foreground flex items-center justify-center hover:bg-accent/20 disabled:opacity-50 transition-colors"
-        aria-label="Voice recording"
+        aria-expanded={false}
+        className="w-10 h-10 rounded-xl bg-muted text-muted-foreground flex items-center justify-center hover:bg-accent/20 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        aria-label="فتح لوحة التسجيل الصوتي"
       >
-        <Mic className="w-4 h-4" />
+        <Mic className="w-4 h-4" aria-hidden="true" />
       </button>
     );
   }
 
   return (
-    <div className="absolute bottom-full left-0 right-0 mb-1 bg-card border border-border rounded-xl shadow-lg p-3 space-y-2" dir="rtl">
+    <div
+      className="absolute bottom-full left-0 right-0 mb-1 bg-card border border-border rounded-xl shadow-lg p-3 space-y-2"
+      dir="rtl"
+      role="group"
+      aria-label="لوحة التسجيل الصوتي"
+      onKeyDown={(e) => {
+        if (e.key === "Escape") {
+          if (isRecording) cancelRecording();
+          else setExpanded(false);
+        }
+      }}
+    >
+      {/* Screen reader status */}
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {statusText}
+      </p>
+
       {/* Error message */}
       {error && (
-        <div className="text-xs text-destructive bg-destructive/10 rounded-lg px-3 py-1.5">
+        <div
+          role="alert"
+          className="text-xs text-destructive bg-destructive/10 rounded-lg px-3 py-1.5"
+        >
           {error}
         </div>
       )}
+
 
       {/* Mute toggle */}
       <div className="flex items-center justify-between">
@@ -160,17 +188,25 @@ export const VoiceRecorder = ({ onTranscript, disabled }: VoiceRecorderProps) =>
           type="button"
           onClick={toggleMute}
           disabled={!isRecording}
-          className="flex items-center gap-2 text-sm text-foreground disabled:opacity-40"
+          aria-pressed={isMuted}
+          aria-label={isMuted ? "إلغاء كتم الميكروفون" : "كتم الميكروفون"}
+          className="flex items-center gap-2 text-sm text-foreground disabled:opacity-40 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
-          {isMuted ? <MicOff className="w-4 h-4 text-destructive" /> : <Mic className="w-4 h-4" />}
+          {isMuted ? (
+            <MicOff className="w-4 h-4 text-destructive" aria-hidden="true" />
+          ) : (
+            <Mic className="w-4 h-4" aria-hidden="true" />
+          )}
           <span>{isMuted ? "صامت" : "كتم الصوت"}</span>
         </button>
         <button
           type="button"
           onClick={() => { if (!isRecording) setExpanded(false); }}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          disabled={isRecording}
+          aria-label="إغلاق لوحة التسجيل الصوتي"
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors rounded disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
-          ✕
+          <span aria-hidden="true">✕</span>
         </button>
       </div>
 
@@ -178,17 +214,24 @@ export const VoiceRecorder = ({ onTranscript, disabled }: VoiceRecorderProps) =>
       <div className="flex items-center gap-2">
         {/* Start/Stop Recording button */}
         {isProcessing ? (
-          <button disabled className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted text-sm">
-            <Loader2 className="w-4 h-4 animate-spin" />
+          <button
+            type="button"
+            disabled
+            aria-label="جاري تحويل الصوت إلى نص"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted text-sm"
+          >
+            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
             <span>جاري التحويل...</span>
           </button>
         ) : isRecording ? (
           <button
             type="button"
             onClick={stopRecording}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-destructive/10 text-destructive text-sm font-medium hover:bg-destructive/20 transition-colors"
+            aria-pressed={true}
+            aria-label={`إيقاف التسجيل، المدة ${formatDuration(duration)}`}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-destructive/10 text-destructive text-sm font-medium hover:bg-destructive/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-            <Circle className="w-3 h-3 fill-destructive animate-pulse" />
+            <Circle className="w-3 h-3 fill-destructive animate-pulse" aria-hidden="true" />
             <span>{formatDuration(duration)}</span>
             <span>إيقاف</span>
           </button>
@@ -197,20 +240,25 @@ export const VoiceRecorder = ({ onTranscript, disabled }: VoiceRecorderProps) =>
             type="button"
             onClick={startRecording}
             disabled={disabled}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 disabled:opacity-50 transition-colors"
+            aria-pressed={false}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-            <Circle className="w-3 h-3" />
+            <Circle className="w-3 h-3" aria-hidden="true" />
             <span>بدء التسجيل</span>
           </button>
         )}
 
         {/* Microphone selector */}
         <div className="relative flex-1">
+          <label htmlFor="voice-recorder-device" className="sr-only">
+            اختيار الميكروفون
+          </label>
           <select
+            id="voice-recorder-device"
             value={selectedDevice}
             onChange={(e) => setSelectedDevice(e.target.value)}
             disabled={isRecording}
-            className="w-full appearance-none rounded-lg border border-border bg-muted px-3 py-2 text-xs text-foreground disabled:opacity-50 pr-7 truncate"
+            className="w-full appearance-none rounded-lg border border-border bg-muted px-3 py-2 text-xs text-foreground disabled:opacity-50 pr-7 truncate focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             {devices.map((d) => (
               <option key={d.deviceId} value={d.deviceId}>
@@ -219,7 +267,10 @@ export const VoiceRecorder = ({ onTranscript, disabled }: VoiceRecorderProps) =>
             ))}
             {devices.length === 0 && <option>🎙 الميكروفون</option>}
           </select>
-          <ChevronDown className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
+          <ChevronDown
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none"
+            aria-hidden="true"
+          />
         </div>
 
         {/* Record indicator */}
@@ -227,13 +278,14 @@ export const VoiceRecorder = ({ onTranscript, disabled }: VoiceRecorderProps) =>
           <button
             type="button"
             onClick={cancelRecording}
-            className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-destructive hover:bg-destructive/10 transition-colors"
-            aria-label="Cancel recording"
+            className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-destructive hover:bg-destructive/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            aria-label="إلغاء التسجيل (Escape)"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-4 h-4" aria-hidden="true" />
           </button>
         )}
       </div>
+
     </div>
   );
 };

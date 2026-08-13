@@ -130,6 +130,13 @@ export const VoiceRecorder = ({ onTranscript, disabled }: VoiceRecorderProps) =>
     return `${m}:${s}`;
   };
 
+  // Status text announced to screen readers
+  const statusText = isProcessing
+    ? "جاري تحويل الصوت إلى نص"
+    : isRecording
+      ? `جاري التسجيل، المدة ${formatDuration(duration)}${isMuted ? "، الميكروفون صامت" : ""}`
+      : "التسجيل متوقف";
+
   // Simple toggle button when collapsed
   if (!expanded) {
     return (
@@ -137,22 +144,43 @@ export const VoiceRecorder = ({ onTranscript, disabled }: VoiceRecorderProps) =>
         type="button"
         onClick={() => setExpanded(true)}
         disabled={disabled}
-        className="w-10 h-10 rounded-xl bg-muted text-muted-foreground flex items-center justify-center hover:bg-accent/20 disabled:opacity-50 transition-colors"
-        aria-label="Voice recording"
+        aria-expanded={false}
+        className="w-10 h-10 rounded-xl bg-muted text-muted-foreground flex items-center justify-center hover:bg-accent/20 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        aria-label="فتح لوحة التسجيل الصوتي"
       >
-        <Mic className="w-4 h-4" />
+        <Mic className="w-4 h-4" aria-hidden="true" />
       </button>
     );
   }
 
   return (
-    <div className="absolute bottom-full left-0 right-0 mb-1 bg-card border border-border rounded-xl shadow-lg p-3 space-y-2" dir="rtl">
+    <div
+      className="absolute bottom-full left-0 right-0 mb-1 bg-card border border-border rounded-xl shadow-lg p-3 space-y-2"
+      dir="rtl"
+      role="group"
+      aria-label="لوحة التسجيل الصوتي"
+      onKeyDown={(e) => {
+        if (e.key === "Escape") {
+          if (isRecording) cancelRecording();
+          else setExpanded(false);
+        }
+      }}
+    >
+      {/* Screen reader status */}
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {statusText}
+      </p>
+
       {/* Error message */}
       {error && (
-        <div className="text-xs text-destructive bg-destructive/10 rounded-lg px-3 py-1.5">
+        <div
+          role="alert"
+          className="text-xs text-destructive bg-destructive/10 rounded-lg px-3 py-1.5"
+        >
           {error}
         </div>
       )}
+
 
       {/* Mute toggle */}
       <div className="flex items-center justify-between">

@@ -190,8 +190,54 @@ export const VoiceChat = ({ onTranscriptMessage, messages, isLoading }: VoiceCha
     return `${m}:${s}`;
   };
 
+  // Text status announced to screen readers
+  const statusText = isProcessing
+    ? "جاري تحويل الصوت إلى نص"
+    : isRecording
+      ? `جاري التسجيل، المدة ${formatDuration(duration)}`
+      : isLoading
+        ? "عزبوت يفكر في الرد"
+        : isPlayingTTS
+          ? "عزبوت يتحدث الآن"
+          : "جاهز للتسجيل، اضغط زر بدء التسجيل أو استخدم مفتاح المسافة";
+
+  // Keyboard shortcut: Space toggles recording, Escape cancels
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const isTyping =
+        target instanceof HTMLElement &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable ||
+          target.tagName === "BUTTON");
+      if (isTyping) return;
+
+      if (e.code === "Space") {
+        e.preventDefault();
+        if (isRecording) stopRecording();
+        else if (!isProcessing && !isLoading) startRecording();
+      } else if (e.key === "Escape" && isRecording) {
+        e.preventDefault();
+        cancelRecording();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isRecording, isProcessing, isLoading, startRecording, stopRecording, cancelRecording]);
+
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-6 space-y-6" dir="rtl">
+    <div
+      className="flex-1 flex flex-col items-center justify-center p-6 space-y-6"
+      dir="rtl"
+      role="region"
+      aria-label="المحادثة الصوتية مع عزبوت"
+    >
+      {/* Screen reader status */}
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {statusText}
+      </p>
+
       {/* Status */}
       <div className="text-center space-y-2">
         {isProcessing ? (

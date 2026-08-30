@@ -27,19 +27,22 @@ echo "  brand-identity.alazab.com Auto Deploy"
 echo "══════════════════════════════════════"
 echo ""
 
-# ─── 1. Prerequisites ───
-info "فحص المتطلبات..."
-command -v node  >/dev/null 2>&1 || err "Node.js غير مثبت — Node.js 24 إلزامي"
-command -v pnpm  >/dev/null 2>&1 || { info "تثبيت pnpm..."; npm i -g pnpm; }
-command -v nginx >/dev/null 2>&1 || err "Nginx غير مثبت"
-
+# ─── 1. Node.js 24 hard gate ───
+info "فحص Node.js 24..."
+command -v node >/dev/null 2>&1 || err "Node.js غير مثبت — Node.js 24 إلزامي"
 NODE_VERSION="$(node -v)"
 NODE_MAJOR="${NODE_VERSION#v}"
 NODE_MAJOR="${NODE_MAJOR%%.*}"
 [ "$NODE_MAJOR" = "$REQUIRED_NODE_MAJOR" ] || err "Node.js 24 إلزامي. الحالي: ${NODE_VERSION}. تم إيقاف النشر."
+ok "Node.js ${NODE_VERSION} مطابق لسياسة الإنتاج"
+
+# ─── 1b. Remaining prerequisites ───
+info "فحص بقية المتطلبات..."
+command -v pnpm  >/dev/null 2>&1 || { info "تثبيت pnpm..."; npm i -g pnpm; }
+command -v nginx >/dev/null 2>&1 || err "Nginx غير مثبت"
 ok "المتطلبات جاهزة — Node ${NODE_VERSION} | pnpm $(pnpm -v)"
 
-# ─── 1b. Environment ───
+# ─── 1c. Environment ───
 [ -f .env ] || err "ملف .env غير موجود — مطلوب VITE_SUPABASE_URL و VITE_SUPABASE_PUBLISHABLE_KEY"
 grep -q "VITE_SUPABASE_URL" .env || err ".env ناقص VITE_SUPABASE_URL"
 grep -q "VITE_SUPABASE_PUBLISHABLE_KEY" .env || err ".env ناقص VITE_SUPABASE_PUBLISHABLE_KEY"

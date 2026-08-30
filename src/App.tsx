@@ -21,6 +21,7 @@ const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
 const TermsPage = lazy(() => import("./pages/TermsPage"));
 const CookiePolicyPage = lazy(() => import("./pages/CookiePolicyPage"));
 const DataDeletionPage = lazy(() => import("./pages/DataDeletionPage"));
+const SitemapPage = lazy(() => import("./pages/SitemapPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminLoginPage = lazy(() => import("./pages/AdminLoginPage"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
@@ -62,6 +63,7 @@ function AnimatedRoutes() {
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/cookies" element={<CookiePolicyPage />} />
         <Route path="/data-deletion" element={<DataDeletionPage />} />
+        <Route path="/sitemap" element={<SitemapPage />} />
         <Route path="/team" element={<TeamPage />} />
         <Route path="/partners" element={<PartnersPage />} />
         <Route path="/careers" element={<CareersPage />} />

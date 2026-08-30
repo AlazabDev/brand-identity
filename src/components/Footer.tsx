@@ -46,6 +46,7 @@ const Footer = () => {
                 { label: "شركاء النجاح", href: "/partners" },
                 { label: "الوظائف", href: "/careers" },
                 { label: "المدونة", href: "/blog" },
+                { label: "خريطة الموقع", href: "/sitemap" },
                 { label: "سياسة الخصوصية", href: "/privacy" },
                 { label: "شروط الاستخدام", href: "/terms" },
                 { label: "سياسة الكوكيز", href: "/cookies" },

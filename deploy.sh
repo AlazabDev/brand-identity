@@ -12,6 +12,7 @@ DOMAIN="brand-identity.alazab.com"
 DEPLOY_DIR="/var/www/core/brand-identity"
 BUILD_DIR="dist"
 WEB_ROOT="${DEPLOY_DIR}/${BUILD_DIR}"
+ACME_ROOT="/var/www/letsencrypt"
 REQUIRED_NODE_MAJOR="24"
 
 # Colors
@@ -66,18 +67,59 @@ info "تجهيز ملفات الإنتاج في ${WEB_ROOT}..."
 sudo chown -R www-data:www-data "$WEB_ROOT"
 sudo find "$WEB_ROOT" -type d -exec chmod 755 {} \;
 sudo find "$WEB_ROOT" -type f -exec chmod 644 {} \;
+sudo mkdir -p "${ACME_ROOT}/.well-known/acme-challenge"
 ok "ملفات الإنتاج جاهزة بدون حذف ملفات المصدر"
 
 # ─── 5. Nginx config ───
 info "إعداد Nginx..."
 NGINX_CONF="/etc/nginx/sites-available/${DOMAIN}"
+NGINX_ENABLED="/etc/nginx/sites-enabled/${DOMAIN}"
+CERT_DIR="/etc/letsencrypt/live/${DOMAIN}"
+
+# First deployment: install a valid HTTP-only ACME bootstrap instead of
+# writing an HTTPS server that references certificate files which do not exist yet.
+if [ ! -s "${CERT_DIR}/fullchain.pem" ] || [ ! -s "${CERT_DIR}/privkey.pem" ]; then
+  warn "شهادة TLS غير موجودة — تفعيل ACME bootstrap على HTTP فقط"
+  sudo tee "$NGINX_CONF" > /dev/null << 'NGINX_BOOTSTRAP'
+server {
+    listen 80;
+    listen [::]:80;
+    server_name brand-identity.alazab.com;
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/letsencrypt;
+        default_type text/plain;
+        try_files $uri =404;
+    }
+
+    location / {
+        return 200 'brand-identity TLS bootstrap\n';
+        add_header Content-Type text/plain;
+    }
+}
+NGINX_BOOTSTRAP
+
+  sudo ln -sfn "$NGINX_CONF" "$NGINX_ENABLED"
+  sudo nginx -t
+  sudo systemctl reload nginx
+  err "TLS غير موجود. نفّذ: certbot certonly --webroot -w ${ACME_ROOT} -d ${DOMAIN} ثم أعد bash deploy.sh"
+fi
 
 sudo tee "$NGINX_CONF" > /dev/null << 'NGINX_EOF'
 server {
     listen 80;
     listen [::]:80;
     server_name brand-identity.alazab.com;
-    return 301 https://$host$request_uri;
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/letsencrypt;
+        default_type text/plain;
+        try_files $uri =404;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
 }
 
 server {
@@ -153,8 +195,9 @@ server {
 }
 NGINX_EOF
 
-sudo ln -sf "$NGINX_CONF" "/etc/nginx/sites-enabled/${DOMAIN}"
-sudo nginx -t && sudo systemctl reload nginx
+sudo ln -sfn "$NGINX_CONF" "$NGINX_ENABLED"
+sudo nginx -t
+sudo systemctl reload nginx
 ok "تم إعداد Nginx"
 
 # ─── 6. Supabase Keep-Alive ───

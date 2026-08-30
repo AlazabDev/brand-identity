@@ -1,31 +1,30 @@
 # Brand Identity
 
-> **Production runtime requirement:** Node.js **24.x only**. The project rejects installation and deployment on any other Node.js major version.
->
-> Enforcement: `.nvmrc`, `.node-version`, `package.json#engines`, `.npmrc#engine-strict`, and `deploy.sh`.
-
-## Project
-
 Production website for **Brand Identity – Alazab Group**.
 
-## Runtime
+## Runtime requirement
 
-Node.js 24 is mandatory.
+**Node.js 24.x is mandatory.**
+
+The repository is intentionally configured to reject installation or production deployment on any Node.js major version other than 24.
+
+Enforcement layers:
+
+- `.nvmrc` → `24`
+- `.node-version` → `24`
+- `package.json` → `engines.node: >=24 <25`
+- `.npmrc` → `engine-strict=true`
+- `deploy.sh` → hard failure unless `node -v` reports major version `24`
 
 ```sh
 node -v
-# must be v24.x.x
-```
-
-Use the repository runtime pin:
-
-```sh
-nvm use
+# required: v24.x.x
 ```
 
 ## Local development
 
 ```sh
+nvm use
 pnpm install
 pnpm dev
 ```
@@ -44,7 +43,7 @@ pnpm build
 bash deploy.sh
 ```
 
-The deployment script exits before dependency installation or build execution when the active Node.js major version is not exactly 24.
+The deployment script validates Node.js 24 before checking pnpm, installing dependencies, or running the production build.
 
 ## Stack
 

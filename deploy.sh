@@ -166,6 +166,15 @@ sudo ln -sf "$NGINX_CONF" "/etc/nginx/sites-enabled/${DOMAIN}"
 sudo nginx -t && sudo systemctl reload nginx
 ok "تم إعداد Nginx"
 
+# ─── 6. Supabase Keep-Alive ───
+info "تثبيت مهمة إبقاء قاعدة Supabase نشطة (كل 24 ساعة)..."
+if [ -f scripts/install-keepalive.sh ]; then
+  sudo PROJECT_DIR="$(pwd)" bash scripts/install-keepalive.sh || warn "تعذر تثبيت مهمة Keep-Alive"
+  ok "مهمة Keep-Alive جاهزة"
+else
+  warn "scripts/install-keepalive.sh غير موجود — تم التخطي"
+fi
+
 # ─── Done ───
 echo ""
 echo "══════════════════════════════════════"
@@ -174,6 +183,8 @@ echo "════════════════════════�
 echo ""
 echo "  🌐  https://${DOMAIN}"
 echo "  📁  ${DEPLOY_DIR}"
+echo "  ⏱   Keep-Alive: systemctl list-timers supabase-keepalive.timer"
+echo "  📝  السجل: /var/log/supabase-keepalive.log"
 echo ""
 echo "  للتحديث: git pull && bash deploy.sh"
 echo ""

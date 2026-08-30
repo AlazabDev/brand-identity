@@ -11,6 +11,7 @@ set -euo pipefail
 DOMAIN="brand-identity.alazab.com"
 DEPLOY_DIR="/var/www/core/brand-identity"
 BUILD_DIR="dist"
+REQUIRED_NODE_MAJOR="24"
 
 # Colors
 G='\033[0;32m' Y='\033[1;33m' R='\033[0;31m' B='\033[0;34m' N='\033[0m'
@@ -28,13 +29,15 @@ echo ""
 
 # ─── 1. Prerequisites ───
 info "فحص المتطلبات..."
-command -v node  >/dev/null 2>&1 || err "Node.js غير مثبت"
+command -v node  >/dev/null 2>&1 || err "Node.js غير مثبت — Node.js 24 إلزامي"
 command -v pnpm  >/dev/null 2>&1 || { info "تثبيت pnpm..."; npm i -g pnpm; }
 command -v nginx >/dev/null 2>&1 || err "Nginx غير مثبت"
 
-NODE_V=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
-[ "$NODE_V" -ge 18 ] || err "يتطلب Node 18+. الحالي: $(node -v)"
-ok "المتطلبات جاهزة — Node $(node -v) | pnpm $(pnpm -v)"
+NODE_VERSION="$(node -v)"
+NODE_MAJOR="${NODE_VERSION#v}"
+NODE_MAJOR="${NODE_MAJOR%%.*}"
+[ "$NODE_MAJOR" = "$REQUIRED_NODE_MAJOR" ] || err "Node.js 24 إلزامي. الحالي: ${NODE_VERSION}. تم إيقاف النشر."
+ok "المتطلبات جاهزة — Node ${NODE_VERSION} | pnpm $(pnpm -v)"
 
 # ─── 1b. Environment ───
 [ -f .env ] || err "ملف .env غير موجود — مطلوب VITE_SUPABASE_URL و VITE_SUPABASE_PUBLISHABLE_KEY"

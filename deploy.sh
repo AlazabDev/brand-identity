@@ -2,7 +2,7 @@
 # ══════════════════════════════════════════════
 #  شركة العزب للمقاولات العامة
 #  Alazab Construction - Production Deploy Script
-#  pnpm + Nginx + SSL
+#  pnpm + Nginx + SSL (alazab.com)
 # ══════════════════════════════════════════════
 
 set -euo pipefail
@@ -11,8 +11,6 @@ set -euo pipefail
 DOMAIN="brand-identity.alazab.com"
 DEPLOY_DIR="/var/www/core/brand-identity"
 BUILD_DIR="dist"
-WEB_ROOT="${DEPLOY_DIR}/${BUILD_DIR}"
-ACME_ROOT="/var/www/letsencrypt"
 REQUIRED_NODE_MAJOR="24"
 
 # Colors
@@ -59,96 +57,65 @@ ok "تم تثبيت الحزم"
 info "بناء التطبيق للإنتاج..."
 pnpm build
 [ -d "$BUILD_DIR" ] || err "فشل البناء — مجلد dist غير موجود"
-[ -f "$BUILD_DIR/index.html" ] || err "فشل البناء — dist/index.html غير موجود"
 ok "تم البناء بنجاح"
 
-# ─── 4. Prepare static web root ───
-info "تجهيز ملفات الإنتاج في ${WEB_ROOT}..."
-sudo chown -R www-data:www-data "$WEB_ROOT"
-sudo find "$WEB_ROOT" -type d -exec chmod 755 {} \;
-sudo find "$WEB_ROOT" -type f -exec chmod 644 {} \;
-sudo mkdir -p "${ACME_ROOT}/.well-known/acme-challenge"
-ok "ملفات الإنتاج جاهزة بدون حذف ملفات المصدر"
+# ─── 4. Deploy files ───
+info "نشر الملفات إلى ${DEPLOY_DIR}..."
+sudo mkdir -p "$DEPLOY_DIR"
+sudo rm -rf "${DEPLOY_DIR:?}/"*
+sudo cp -r ${BUILD_DIR}/* "$DEPLOY_DIR/"
+sudo chown -R www-data:www-data "$DEPLOY_DIR"
+sudo chmod -R 755 "$DEPLOY_DIR"
+ok "تم نشر الملفات"
 
 # ─── 5. Nginx config ───
 info "إعداد Nginx..."
 NGINX_CONF="/etc/nginx/sites-available/${DOMAIN}"
-NGINX_ENABLED="/etc/nginx/sites-enabled/${DOMAIN}"
-CERT_DIR="/etc/letsencrypt/live/${DOMAIN}"
-
-# First deployment: install a valid HTTP-only ACME bootstrap instead of
-# writing an HTTPS server that references certificate files which do not exist yet.
-if [ ! -s "${CERT_DIR}/fullchain.pem" ] || [ ! -s "${CERT_DIR}/privkey.pem" ]; then
-  warn "شهادة TLS غير موجودة — تفعيل ACME bootstrap على HTTP فقط"
-  sudo tee "$NGINX_CONF" > /dev/null << 'NGINX_BOOTSTRAP'
-server {
-    listen 80;
-    listen [::]:80;
-    server_name brand-identity.alazab.com;
-
-    location ^~ /.well-known/acme-challenge/ {
-        root /var/www/letsencrypt;
-        default_type text/plain;
-        try_files $uri =404;
-    }
-
-    location / {
-        return 200 'brand-identity TLS bootstrap\n';
-        add_header Content-Type text/plain;
-    }
-}
-NGINX_BOOTSTRAP
-
-  sudo ln -sfn "$NGINX_CONF" "$NGINX_ENABLED"
-  sudo nginx -t
-  sudo systemctl reload nginx
-  err "TLS غير موجود. نفّذ: certbot certonly --webroot -w ${ACME_ROOT} -d ${DOMAIN} ثم أعد bash deploy.sh"
-fi
 
 sudo tee "$NGINX_CONF" > /dev/null << 'NGINX_EOF'
+# ── HTTP → HTTPS redirect ──
 server {
     listen 80;
     listen [::]:80;
     server_name brand-identity.alazab.com;
-
-    location ^~ /.well-known/acme-challenge/ {
-        root /var/www/letsencrypt;
-        default_type text/plain;
-        try_files $uri =404;
-    }
-
-    location / {
-        return 301 https://$host$request_uri;
-    }
+    return 301 https://$host$request_uri;
 }
 
+# ── Main HTTPS ──
 server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
     server_name brand-identity.alazab.com;
 
-    root /var/www/core/brand-identity/dist;
+    root /var/www/core/brand-identity;
     index index.html;
 
+    # SSL
     ssl_certificate     /etc/letsencrypt/live/brand-identity.alazab.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/brand-identity.alazab.com/privkey.pem;
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
+    # Security headers
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-XSS-Protection "1; mode=block" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     add_header Permissions-Policy "camera=(), microphone=(self), geolocation=()" always;
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
-    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://connect.facebook.net https://graph.facebook.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://graph.facebook.com https://connect.facebook.net https://api.elevenlabs.io; frame-src 'self' https://www.facebook.com https://web.facebook.com https://3d.magicplan.app https://www.google.com;" always;
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://connect.facebook.net https://graph.facebook.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://graph.facebook.com https://connect.facebook.net https://api.elevenlabs.io; frame-src 'self' https://www.facebook.com https://web.facebook.com https://3d.magicplan.app;" always;
 
+    # Gzip
     gzip on;
     gzip_vary on;
     gzip_min_length 1024;
     gzip_comp_level 6;
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript image/svg+xml application/wasm;
 
+    # Brotli (if module available)
+    # brotli on; brotli_comp_level 6; brotli_types text/plain text/css application/json application/javascript image/svg+xml;
+
+    # Static assets — immutable cache
     location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|webp|avif|wasm)$ {
         expires 1y;
         add_header Cache-Control "public, immutable";
@@ -156,14 +123,17 @@ server {
         try_files $uri =404;
     }
 
+    # sitemap & robots
     location = /sitemap.xml { add_header Cache-Control "public, max-age=3600"; }
     location = /robots.txt  { add_header Cache-Control "public, max-age=3600"; }
 
+    # SPA fallback
     location / {
         try_files $uri $uri/ /index.html;
         add_header Cache-Control "no-cache, must-revalidate";
     }
 
+    # Supabase Edge Functions proxy
     location /functions/v1/ {
         proxy_pass https://tcjbcbmvkajwnsuzhefh.supabase.co/functions/v1/;
         proxy_set_header Host tcjbcbmvkajwnsuzhefh.supabase.co;
@@ -174,6 +144,7 @@ server {
         proxy_read_timeout 60s;
     }
 
+    # Auth & API & Webhook routes (proxy to Supabase Edge Functions)
     location /auth/v1/callback {
         proxy_pass https://tcjbcbmvkajwnsuzhefh.supabase.co/functions/v1/auth-callback;
         proxy_set_header Host tcjbcbmvkajwnsuzhefh.supabase.co;
@@ -190,14 +161,15 @@ server {
         proxy_ssl_server_name on;
     }
 
+    # Block dotfiles
     location ~ /\. { deny all; }
+
     error_page 404 /index.html;
 }
 NGINX_EOF
 
-sudo ln -sfn "$NGINX_CONF" "$NGINX_ENABLED"
-sudo nginx -t
-sudo systemctl reload nginx
+sudo ln -sf "$NGINX_CONF" "/etc/nginx/sites-enabled/${DOMAIN}"
+sudo nginx -t && sudo systemctl reload nginx
 ok "تم إعداد Nginx"
 
 # ─── 6. Supabase Keep-Alive ───
@@ -216,9 +188,9 @@ echo -e "  ${G}✓ تم النشر بنجاح!${N}"
 echo "══════════════════════════════════════"
 echo ""
 echo "  🌐  https://${DOMAIN}"
-echo "  📁  ${WEB_ROOT}"
+echo "  📁  ${DEPLOY_DIR}"
 echo "  ⏱   Keep-Alive: systemctl list-timers supabase-keepalive.timer"
 echo "  📝  السجل: /var/log/supabase-keepalive.log"
 echo ""
-echo "  للتحديث: git pull --ff-only origin main && bash deploy.sh"
+echo "  للتحديث: git pull && bash deploy.sh"
 echo ""

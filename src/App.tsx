@@ -8,6 +8,8 @@ import SkipToContent from "@/components/SkipToContent";
 import LoadingScreen from "@/components/LoadingScreen";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { CookieConsent } from "@/components/CookieConsent";
+import { PortalSessionProvider } from "@/hooks/usePortalSession";
+import PortalGuard from "@/components/portal/PortalGuard";
 // Lazy load pages for better performance
 const Index = lazy(() => import("./pages/Index"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
@@ -37,6 +39,9 @@ const ArchitectureProjectDetailPage = lazy(() => import("./pages/ArchitecturePro
 const AdminArchitecturePage = lazy(() => import("./pages/AdminArchitecturePage"));
 const ShowcaseIndexPage = lazy(() => import("./pages/ShowcaseIndexPage"));
 const ShowcaseDetailPage = lazy(() => import("./pages/ShowcaseDetailPage"));
+const PortalLoginPage = lazy(() => import("./pages/portal/PortalLoginPage"));
+const PortalDashboardPage = lazy(() => import("./pages/portal/PortalDashboardPage"));
+const PortalProjectPage = lazy(() => import("./pages/portal/PortalProjectPage"));
 
 const queryClient = new QueryClient();
 
@@ -78,6 +83,9 @@ function AnimatedRoutes() {
         <Route path="/architecture/:id" element={<ArchitectureProjectDetailPage />} />
         <Route path="/showcase" element={<ShowcaseIndexPage />} />
         <Route path="/showcase/:slug" element={<ShowcaseDetailPage />} />
+        <Route path="/portal/login" element={<PortalLoginPage />} />
+        <Route path="/portal" element={<PortalGuard><PortalDashboardPage /></PortalGuard>} />
+        <Route path="/portal/projects/:id" element={<PortalGuard><PortalProjectPage /></PortalGuard>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>
@@ -94,10 +102,12 @@ const App = () => (
         >
           <SkipToContent />
           <ScrollToTop />
-          <Suspense fallback={<LoadingScreen />}>
-            <AnimatedRoutes />
-            <CookieConsent />
-          </Suspense>
+          <PortalSessionProvider>
+            <Suspense fallback={<LoadingScreen />}>
+              <AnimatedRoutes />
+              <CookieConsent />
+            </Suspense>
+          </PortalSessionProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

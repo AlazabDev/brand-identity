@@ -53,6 +53,65 @@ export type Database = {
         }
         Relationships: []
       }
+      client_profiles: {
+        Row: {
+          company: string | null
+          created_at: string
+          full_name: string
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          full_name: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      client_projects: {
+        Row: {
+          created_at: string
+          id: string
+          project_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          project_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          project_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_projects_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_messages: {
         Row: {
           area: string | null
@@ -164,6 +223,50 @@ export type Database = {
         }
         Relationships: []
       }
+      project_milestones: {
+        Row: {
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          project_id: string
+          sort_order: number
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          project_id: string
+          sort_order?: number
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          project_id?: string
+          sort_order?: number
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_milestones_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           area: string | null
@@ -171,11 +274,16 @@ export type Database = {
           client_name: string | null
           completion_date: string | null
           created_at: string
+          daftra_client_id: string | null
           description: string | null
           featured: boolean | null
           id: string
           images: string[] | null
+          magicplan_plan_id: string | null
           mall: string | null
+          minio_prefix: string | null
+          progress: number
+          status: string
           title: string
           updated_at: string
         }
@@ -185,11 +293,16 @@ export type Database = {
           client_name?: string | null
           completion_date?: string | null
           created_at?: string
+          daftra_client_id?: string | null
           description?: string | null
           featured?: boolean | null
           id?: string
           images?: string[] | null
+          magicplan_plan_id?: string | null
           mall?: string | null
+          minio_prefix?: string | null
+          progress?: number
+          status?: string
           title: string
           updated_at?: string
         }
@@ -199,11 +312,16 @@ export type Database = {
           client_name?: string | null
           completion_date?: string | null
           created_at?: string
+          daftra_client_id?: string | null
           description?: string | null
           featured?: boolean | null
           id?: string
           images?: string[] | null
+          magicplan_plan_id?: string | null
           mall?: string | null
+          minio_prefix?: string | null
+          progress?: number
+          status?: string
           title?: string
           updated_at?: string
         }

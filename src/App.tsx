@@ -8,6 +8,7 @@ import SkipToContent from "@/components/SkipToContent";
 import LoadingScreen from "@/components/LoadingScreen";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { CookieConsent } from "@/components/CookieConsent";
+
 // Lazy load pages for better performance
 const Index = lazy(() => import("./pages/Index"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
@@ -25,6 +26,11 @@ const SitemapPage = lazy(() => import("./pages/SitemapPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminLoginPage = lazy(() => import("./pages/AdminLoginPage"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const AdminPortalPage = lazy(() => import("./pages/AdminPortalPage"));
+const PortalLoginPage = lazy(() => import("./pages/PortalLoginPage"));
+const PortalResetPasswordPage = lazy(() => import("./pages/PortalResetPasswordPage"));
+const PortalProjectsPage = lazy(() => import("./pages/PortalProjectsPage"));
+const PortalProjectPage = lazy(() => import("./pages/PortalProjectPage"));
 const MaintenanceTrackingPage = lazy(() => import("./pages/MaintenanceTrackingPage"));
 const TeamPage = lazy(() => import("./pages/TeamPage"));
 const ProjectDetailPage = lazy(() => import("./pages/ProjectDetailPage"));
@@ -68,8 +74,15 @@ function AnimatedRoutes() {
         <Route path="/partners" element={<PartnersPage />} />
         <Route path="/careers" element={<CareersPage />} />
         <Route path="/projects/:id" element={<ProjectDetailPage />} />
+
+        <Route path="/portal/login" element={<PortalLoginPage />} />
+        <Route path="/portal/reset-password" element={<PortalResetPasswordPage />} />
+        <Route path="/portal" element={<PortalProjectsPage />} />
+        <Route path="/portal/projects/:id" element={<PortalProjectPage />} />
+
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/portal" element={<AdminPortalPage />} />
         <Route path="/maintenance-tracking" element={<MaintenanceTrackingPage />} />
         <Route path="/admin/webhooks" element={<WebhookDashboardPage />} />
         <Route path="/admin/architecture" element={<AdminArchitecturePage />} />

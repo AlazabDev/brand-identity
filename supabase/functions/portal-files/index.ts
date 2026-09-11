@@ -10,9 +10,52 @@ interface StoredFile {
   url: string;
 }
 
+function decodeXml(value: string): string {
+  return value
+    .replaceAll("&amp;", "&")
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&apos;", "'");
+}
+
 function textBetween(xml: string, tag: string): string[] {
   const matches = xml.match(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`, "g")) ?? [];
-  return matches.map((entry) => entry.replace(new RegExp(`</?${tag}>`, "g"), ""));
+  return matches.map((entry) =>
+    decodeXml(entry.replace(new RegExp(`</?${tag}>`, "g"), ""))
+  );
+}
+
+function resolveBucketBase(endpoint: string, bucket?: string | null): {
+  bucketBase: string;
+  mode: "bucket-in-endpoint" | "separate-bucket";
+} | null {
+  let parsed: URL;
+  try {
+    parsed = new URL(endpoint);
+  } catch {
+    return null;
+  }
+
+  const endpointPath = parsed.pathname.replace(/\/+$/, "");
+  if (endpointPath && endpointPath !== "/") {
+    return {
+      bucketBase: `${parsed.origin}${endpointPath}`,
+      mode: "bucket-in-endpoint",
+    };
+  }
+
+  const normalizedBucket = bucket?.trim();
+  if (!normalizedBucket) return null;
+
+  return {
+    bucketBase: `${parsed.origin}/${normalizedBucket}`,
+    mode: "separate-bucket",
+  };
+}
+
+function objectUrl(bucketBase: string, key: string): string {
+  return `${bucketBase}/${key.split("/").map(encodeURIComponent).join("/")}`;
 }
 
 serve(async (req) => {
@@ -30,14 +73,28 @@ serve(async (req) => {
     const secretKey = Deno.env.get("MINIO_SECRET_KEY");
     const bucket = Deno.env.get("MINIO_BUCKET");
 
-    if (!endpoint || !accessKey || !secretKey || !bucket) {
-      return jsonResponse({ configured: false, files: [] });
+    if (!endpoint || !accessKey || !secretKey) {
+      return jsonResponse({ configured: false, linked: false, files: [] });
     }
 
-    const prefix = auth.project.minio_prefix;
-    if (!prefix) return jsonResponse({ configured: true, linked: false, files: [] });
+    const storageTarget = resolveBucketBase(endpoint, bucket);
+    if (!storageTarget) {
+      console.error(
+        "MinIO configuration requires either a bucket in MINIO_ENDPOINT or MINIO_BUCKET",
+      );
+      return jsonResponse({ configured: false, linked: false, files: [] });
+    }
 
-    const host = endpoint.replace(/\/$/, "");
+    const prefix = auth.project.minio_prefix?.replace(/^\/+/, "");
+    if (!prefix) {
+      return jsonResponse({
+        configured: true,
+        linked: false,
+        files: [],
+        configurationMode: storageTarget.mode,
+      });
+    }
+
     const client = new AwsClient({
       accessKeyId: accessKey,
       secretAccessKey: secretKey,
@@ -45,38 +102,65 @@ serve(async (req) => {
       region: Deno.env.get("MINIO_REGION") ?? "us-east-1",
     });
 
-    const listUrl =
-      `${host}/${bucket}?list-type=2&prefix=${encodeURIComponent(prefix.replace(/^\//, ""))}&max-keys=200`;
-    const listRes = await client.fetch(listUrl, { method: "GET" });
-
-    if (!listRes.ok) {
-      console.error("MinIO list failed", listRes.status);
-      return jsonResponse({ error: "File storage unavailable" }, 502);
-    }
-
-    const xml = await listRes.text();
-    const contents = xml.match(/<Contents>[\s\S]*?<\/Contents>/g) ?? [];
-
     const files: StoredFile[] = [];
-    for (const entry of contents) {
-      const key = textBetween(entry, "Key")[0];
-      if (!key || key.endsWith("/")) continue;
+    let continuationToken: string | null = null;
+    let page = 0;
 
-      const signed = await client.sign(
-        new Request(`${host}/${bucket}/${key.split("/").map(encodeURIComponent).join("/")}?X-Amz-Expires=900`),
-        { aws: { signQuery: true } },
-      );
+    do {
+      page += 1;
+      if (page > 100) {
+        console.error("MinIO listing stopped after 100 pages", prefix);
+        break;
+      }
 
-      files.push({
-        key,
-        name: key.split("/").pop() ?? key,
-        size: Number(textBetween(entry, "Size")[0] ?? 0),
-        lastModified: textBetween(entry, "LastModified")[0] ?? null,
-        url: signed.url,
-      });
-    }
+      const listUrl = new URL(storageTarget.bucketBase);
+      listUrl.searchParams.set("list-type", "2");
+      listUrl.searchParams.set("prefix", prefix);
+      listUrl.searchParams.set("max-keys", "1000");
+      if (continuationToken) {
+        listUrl.searchParams.set("continuation-token", continuationToken);
+      }
 
-    return jsonResponse({ configured: true, linked: true, files });
+      const listRes = await client.fetch(listUrl, { method: "GET" });
+      if (!listRes.ok) {
+        console.error("MinIO list failed", listRes.status, await listRes.text());
+        return jsonResponse({ error: "File storage unavailable" }, 502);
+      }
+
+      const xml = await listRes.text();
+      const contents = xml.match(/<Contents>[\s\S]*?<\/Contents>/g) ?? [];
+
+      for (const entry of contents) {
+        const key = textBetween(entry, "Key")[0];
+        if (!key || key.endsWith("/")) continue;
+
+        const signed = await client.sign(
+          new Request(`${objectUrl(storageTarget.bucketBase, key)}?X-Amz-Expires=900`),
+          { aws: { signQuery: true } },
+        );
+
+        files.push({
+          key,
+          name: key.split("/").pop() ?? key,
+          size: Number(textBetween(entry, "Size")[0] ?? 0),
+          lastModified: textBetween(entry, "LastModified")[0] ?? null,
+          url: signed.url,
+        });
+      }
+
+      const isTruncated = textBetween(xml, "IsTruncated")[0]?.toLowerCase() === "true";
+      continuationToken = isTruncated
+        ? textBetween(xml, "NextContinuationToken")[0] ?? null
+        : null;
+    } while (continuationToken);
+
+    return jsonResponse({
+      configured: true,
+      linked: true,
+      configurationMode: storageTarget.mode,
+      prefix,
+      files,
+    });
   } catch (error) {
     console.error("portal-files error", error);
     return jsonResponse({ error: "Unexpected error" }, 500);

@@ -49,9 +49,14 @@ export async function getSessionOrNull() {
 }
 
 export async function getMyProfile(): Promise<ClientProfile | null> {
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError) throw userError;
+  if (!userData.user) return null;
+
   const { data, error } = await supabase
     .from("client_profiles")
     .select("*")
+    .eq("user_id", userData.user.id)
     .maybeSingle();
   if (error) throw error;
   return data as ClientProfile | null;

@@ -1,66 +1,42 @@
-# خطة المراجعة الإنتاجية الشاملة
+# بوابة العملاء لمتابعة المشروعات
 
-نطاق العمل ضخم ولا يمكن إنجازه في جولة واحدة بجودة عالية. سأنفذها على **4 جولات متتالية**، كل جولة تنتهي بتحقق بصري عبر Playwright وتقرير قصير قبل الانتقال للجولة التالية.
+منطقة خاصة داخل الموقع الحالي يدخل إليها العميل ليتابع مشروعه: الحالة المالية من دفترة، التصميمات والنماذج ثلاثية الأبعاد من ماجيك بلان، والملفات من مخزن MinIO.
 
-## الجولة 1 — الوظائف وتجربة المستخدم (UX/Bugs) — الأولوية القصوى
-1. **فحص شامل لكل الصفحات**: تشغيل Playwright على الصفحات الرئيسية (Home, About, Services, Projects, Architecture, Quote, Contact, Blog, FAQ, Careers, Team, Partners, Admin) والتقاط لقطات + رصد أخطاء console/network.
-2. **النماذج (Forms)**: مراجعة Zod validation، رسائل الخطأ بالعربية، حالات التحميل، منع الإرسال المزدوج، تنظيف المدخلات. الصفحات المعنية: Quote, Contact, Careers, MaintenanceTracking, AdminLogin.
-3. **الروابط المعطلة**: فحص كل CTA وزر تنقل + 404 handling.
-4. **حالات الفراغ والخطأ**: Empty states, Error boundaries, Loading skeletons.
-5. **التنقل و الـ Header/Footer**: روابط mobile menu، روابط social، WhatsApp button.
-6. **AzaBot**: تجربة text + voice، رفع الملفات، رسائل الخطأ.
-7. **Admin Dashboard**: CRUD للمشاريع، الـ webhooks، تسجيل الدخول.
+## ما سيراه العميل
 
-## الجولة 2 — التصميم والاتساق البصري
-1. **Design tokens audit**: إيجاد أي `text-white`, `bg-black`, `bg-[#...]` مباشرة واستبدالها بـ semantic tokens.
-2. **RTL**: فحص كل صفحة، إصلاح `mr-*/ml-*` التي يجب أن تكون `ms-*/me-*`.
-3. **Typography**: تأكيد Tajawal للعناوين، Cairo للنصوص، أحجام متسقة.
-4. **Responsive**: فحص mobile/tablet/desktop لكل صفحة رئيسية.
-5. **Dark mode**: التأكد من عمله أو إزالته إن لم يكن مطلوبًا.
-6. **Spacing/Hierarchy**: توحيد padding/margin بين الأقسام.
-7. **Loading screen + Page transitions**: تحسين سلاسة.
+1. **تسجيل الدخول** على `/portal/login` — بريد وكلمة مرور، مع صفحة استعادة كلمة المرور. لا يوجد تسجيل ذاتي؛ الإدارة هي من تنشئ الحسابات وتربط كل حساب بمشروعه.
+2. **قائمة مشروعاتي** `/portal` — بطاقة لكل مشروع: الاسم، المول، المساحة، نسبة الإنجاز، الحالة.
+3. **صفحة المشروع** `/portal/projects/:id` بأربعة تبويبات:
+   - نظرة عامة: خط زمني للمراحل ونسبة الإنجاز.
+   - الحسابات: الفواتير والمدفوعات والمتبقي (من دفترة).
+   - التصميمات: النموذج ثلاثي الأبعاد والمخططات (من ماجيك بلان).
+   - الملفات: تحميل ومعاينة المستندات والصور (من MinIO).
+4. **إدارة العملاء** داخل لوحة `/admin` — إنشاء حساب عميل، ربطه بمشروع، وإدخال معرّف المشروع في دفترة وماجيك بلان واسم مجلد MinIO.
 
-## الجولة 3 — الأداء والـ SEO
-1. **الصور**: تحويل JPG/PNG كبيرة إلى WebP، إضافة `loading="lazy"` و `alt` text، استخدام `<picture>` للـ LCP image.
-2. **Code splitting**: التحقق من `React.lazy` للصفحات الثقيلة.
-3. **Bundle analysis**: إزالة dependencies غير المستخدمة.
-4. **Meta tags**: عنوان فريد + meta description لكل صفحة عبر `PageMeta`.
-5. **Sitemap.xml**: تحديثه ليشمل كل الصفحات الفعلية.
-6. **robots.txt**: مراجعة.
-7. **JSON-LD**: schema للمنظمة + المشاريع.
-8. **Open Graph + Twitter cards**: لكل صفحة.
-9. **تشغيل SEO scan** ومعالجة النتائج.
+كل عميل يرى مشروعاته فقط، ولا يمكنه رؤية بيانات أي عميل آخر.
 
-## الجولة 4 — الأمان (Backend/RLS/Edge Functions)
-1. **تشغيل security scan الشامل** ومعالجة كل النتائج.
-2. **مراجعة RLS policies** لكل جدول (projects, blog_posts, contact_messages, quote_requests, job_applications, webhook_logs, whatsapp_messages, platform_connections).
-3. **مراجعة GRANT statements** للجداول العامة.
-4. **Edge Functions audit**:
-   - input validation بـ Zod
-   - CORS صحيح
-   - معالجة الأخطاء بدون كشف معلومات حساسة
-   - rate limiting حيث يلزم
-   - عدم تسريب secrets في الـ logs
-5. **Auth hardening**: HIBP password check، إيقاف anonymous signups.
-6. **Secrets review**: إزالة أي secret غير مستخدم.
-7. **Supabase linter** + معالجة كل التحذيرات.
+## التفاصيل التقنية
 
-## التحقق البصري
-في نهاية كل جولة: تشغيل Playwright على الصفحات المعدّلة + لقطات desktop (1280×1800) + لقطة mobile (375×800) لتأكيد عدم وجود regression.
+**قاعدة البيانات (Supabase)**
+- `client_profiles` (user_id, full_name, phone, company)
+- `client_projects` (project_id, user_id) — ربط العميل بمشروع أو أكثر
+- توسعة `projects` بحقول: `daftra_client_id`, `magicplan_plan_id`, `minio_prefix`, `progress`, `status`
+- `project_milestones` (project_id, title, due_date, status, order)
+- سياسات RLS: العميل يقرأ الصفوف المرتبطة بـ `auth.uid()` فقط، والأدمن يدير الكل عبر `private.has_role`.
+- GRANT لكل جدول جديد حسب السياسات.
 
-## التسليم
-بعد كل جولة سأعرض:
-- ملخص ما تم إصلاحه
-- لقطات قبل/بعد للتغييرات المرئية
-- قائمة الملفات المعدلة
-- ما تبقى للجولة التالية
+**دوال الخادم (Edge Functions)** — كلها تتحقق من هوية المستخدم وملكيته للمشروع قبل أي استدعاء خارجي:
+- `daftra-proxy`: فواتير ومدفوعات العميل.
+- `magicplan-proxy`: بيانات النموذج ورابط العرض.
+- `minio-files`: سرد الملفات وإصدار روابط موقعة مؤقتة (S3 presigned).
 
----
+**الواجهة**: React Query لجلب البيانات عبر طبقة خدمات في `src/services/`، Zustand لحالة الجلسة، مكونات shadcn، نفس الهوية (أزرق داكن/ذهبي، RTL، Tajawal/Cairo).
 
-**ملاحظات تقنية**:
-- لن أعدّل ملفات auto-generated (`supabase/client.ts`, `types.ts`, `.env`).
-- migrations جديدة تحتاج موافقتك قبل التنفيذ.
-- إذا تطلب الأمر secrets جديدة سأطلبها صراحة.
-- التزام بـ project-knowledge: strict TS, no `any`, named exports, kebab-case, Tailwind فقط.
+## ما أحتاجه منك قبل التشغيل الفعلي
 
-هل أبدأ بالجولة 1 (UX/Functions) الآن؟
+هذه المفاتيح ستُحفظ في الخزنة الآمنة ولن تظهر في الكود:
+- دفترة: مفتاح API من إعدادات الحساب.
+- ماجيك بلان: مفتاح API من لوحة المطوّرين.
+- MinIO: Access Key و Secret Key واسم الـ bucket.
+
+سأبني كل شيء أولاً، وستعرض التبويبات الخارجية رسالة «بانتظار الربط» حتى تضيف المفاتيح.

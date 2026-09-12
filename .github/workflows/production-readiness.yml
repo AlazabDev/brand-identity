@@ -10,12 +10,12 @@ on:
       - main
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     env:
       VITE_SUPABASE_PROJECT_ID: ci-placeholder
       VITE_SUPABASE_URL: https://example.supabase.co
@@ -35,27 +35,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
+          cache: pnpm
 
-      - name: Install dependencies
-        shell: bash
-        run: |
-          if [ -f pnpm-lock.yaml ]; then
-            pnpm install --frozen-lockfile
-          else
-            pnpm install --no-frozen-lockfile
-          fi
-
-      - name: Persist generated pnpm lockfile
-        if: github.event_name == 'push'
-        shell: bash
-        run: |
-          git add pnpm-lock.yaml
-          if ! git diff --cached --quiet; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git commit -m "chore: lock pnpm dependencies [skip ci]"
-            git push origin "HEAD:${GITHUB_REF_NAME}"
-          fi
+      - name: Install dependencies from lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Typecheck
         run: pnpm typecheck
@@ -69,11 +52,8 @@ jobs:
       - name: Production build
         run: pnpm build
 
-      - name: Upload pnpm lockfile
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pnpm-lock
-          path: pnpm-lock.yaml
-          if-no-files-found: ignore
-          retention-days: 3
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Browser smoke tests
+        run: pnpm test:e2e

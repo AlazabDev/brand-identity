@@ -2,11 +2,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Shared types and data helpers for the client project portal.
- * The portal reads from Supabase (projects, milestones, links) and calls
- * the portal-* edge functions which proxy Daftra, Magicplan and MinIO.
  * External systems remain the source of truth; this layer only aggregates.
  */
-
 export interface PortalProject {
   id: string;
   title: string;
@@ -49,24 +46,58 @@ export interface DaftraInvoice {
   payment_status?: string;
 }
 
+export interface DaftraWorkOrder {
+  id: number;
+  number?: string;
+  title?: string;
+  client_id?: number | null;
+  status?: string | number | null;
+  start_date?: string | null;
+  delivery_date?: string | null;
+  description?: string | null;
+  budget?: number | string | null;
+  budget_currency?: string | null;
+  created?: string | null;
+  modified?: string | null;
+}
+
 export interface DaftraResult {
   configured: boolean;
   linked?: boolean;
+  workOrder?: DaftraWorkOrder | null;
   invoices: DaftraInvoice[];
   summary: { total: number; paid: number; remaining: number; currency: string } | null;
 }
 
-export interface MagicplanResult {
+export interface MagicplanProjectData {
+  id: string;
+  plan_id?: string | null;
+  external_reference_id?: string | null;
+  name?: string | null;
+  description?: string | null;
+  thumbnail_url?: string | null;
+  cloud_url?: string | null;
+  user_created?: string | null;
+  user_modified?: string | null;
+  archived_at?: string | null;
+  address?: {
+    street?: string | null;
+    city?: string | null;
+    country?: string | null;
+    postal_code?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+  } | null;
+}
+
+export interface MagicplanProjectResult {
   configured: boolean;
   linked?: boolean;
-  plan: {
-    id: string;
-    name: string;
-    viewerUrl: string | null;
-    area?: number | string | null;
-    floors?: unknown[];
-    updatedAt?: string | null;
-  } | null;
+  action: "project";
+  projectId?: string;
+  storedPlanId?: string | null;
+  data: MagicplanProjectData | null;
+  pageInfo?: unknown;
 }
 
 export interface StoredFile {
@@ -81,24 +112,29 @@ export interface FilesResult {
   configured: boolean;
   linked?: boolean;
   files: StoredFile[];
+  prefix?: string;
+  configurationMode?: "bucket-in-endpoint" | "separate-bucket";
 }
 
-async function invoke<T>(fn: string, projectId: string): Promise<T> {
-  const { data, error } = await supabase.functions.invoke(fn, {
-    body: { projectId },
-  });
+async function invoke<T>(fn: string, body: Record<string, unknown>): Promise<T> {
+  const { data, error } = await supabase.functions.invoke(fn, { body });
   if (error) throw error;
   return data as T;
 }
 
 export const fetchDaftra = (projectId: string) =>
-  invoke<DaftraResult>("portal-daftra", projectId);
+  invoke<DaftraResult>("portal-daftra", { projectId });
 
-export const fetchMagicplan = (projectId: string) =>
-  invoke<MagicplanResult>("portal-magicplan", projectId);
+/**
+ * Only the Magicplan project action is consumed by the production UI today.
+ * Plan/files actions stay behind the Edge Function until their live server
+ * response shapes are re-verified against the production account.
+ */
+export const fetchMagicplanProject = (projectId: string) =>
+  invoke<MagicplanProjectResult>("portal-magicplan", { projectId, action: "project" });
 
 export const fetchFiles = (projectId: string) =>
-  invoke<FilesResult>("portal-files", projectId);
+  invoke<FilesResult>("portal-files", { projectId });
 
 /** Project status → Arabic label + tone used across the portal. */
 export const STATUS_META: Record<string, { label: string; tone: string }> = {
@@ -119,16 +155,17 @@ export const MILESTONE_STATUS_META: Record<string, { label: string; tone: string
 };
 
 export function statusMeta(status: string | null | undefined) {
-  return STATUS_META[status ?? ""] ?? { label: status ?? "غير محدد", tone: "bg-muted text-muted-foreground" };
+  return STATUS_META[status ?? ""] ?? {
+    label: status ?? "غير محدد",
+    tone: "bg-muted text-muted-foreground",
+  };
 }
 
 export function milestoneStatusMeta(status: string | null | undefined) {
-  return (
-    MILESTONE_STATUS_META[status ?? ""] ?? {
-      label: status ?? "غير محدد",
-      tone: "bg-muted text-muted-foreground",
-    }
-  );
+  return MILESTONE_STATUS_META[status ?? ""] ?? {
+    label: status ?? "غير محدد",
+    tone: "bg-muted text-muted-foreground",
+  };
 }
 
 export function formatCurrency(value: number, currency = "EGP") {
@@ -157,6 +194,6 @@ export function formatDate(value: string | null | undefined) {
 export function formatFileSize(bytes: number) {
   if (!bytes) return "0 B";
   const units = ["B", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
   return `${(bytes / Math.pow(1024, i)).toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
 }

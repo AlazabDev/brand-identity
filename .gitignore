@@ -7,10 +7,22 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies and build output
 node_modules
 dist
 dist-ssr
 *.local
+
+# Runtime environment files
+.env
+.env.*
+!.env.example
+
+# Generated/private Daftra operational exports
+openapi/daftra/account_cache.json
+openapi/daftra/cleaned/
+openapi/daftra/kb/
+openapi/daftra/*.sqlite
 
 # Editor directories and files
 .vscode/*

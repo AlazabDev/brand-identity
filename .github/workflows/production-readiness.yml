@@ -3,7 +3,7 @@ name: Production Readiness
 on:
   push:
     branches:
-      - fix/production-ready-2026-09-12-v2
+      - "fix/production-*"
   pull_request:
     branches:
       - main

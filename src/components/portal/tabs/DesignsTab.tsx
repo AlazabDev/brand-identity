@@ -1,17 +1,29 @@
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircle, ExternalLink, Ruler, Boxes } from "lucide-react";
-import { fetchMagicplan, formatDate } from "@/lib/portal";
-import { SectionCard, InfoRow, EmptyState, NotConfigured, TabSkeleton } from "@/components/portal/PortalUI";
+import { AlertCircle, ExternalLink, DraftingCompass, Image as ImageIcon } from "lucide-react";
+import { fetchMagicplanProject, formatDate } from "@/lib/portal";
+import {
+  SectionCard,
+  InfoRow,
+  EmptyState,
+  NotConfigured,
+  TabSkeleton,
+} from "@/components/portal/PortalUI";
 import { Button } from "@/components/ui/button";
 
 export default function DesignsTab({ projectId }: { projectId: string }) {
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["portal-magicplan", projectId],
-    queryFn: () => fetchMagicplan(projectId),
+    queryKey: ["portal-magicplan-project", projectId],
+    queryFn: () => fetchMagicplanProject(projectId),
     staleTime: 60_000,
   });
 
-  if (isLoading) return <SectionCard title="التصاميم والمخططات"><TabSkeleton /></SectionCard>;
+  if (isLoading) {
+    return (
+      <SectionCard title="التصاميم والمخططات">
+        <TabSkeleton />
+      </SectionCard>
+    );
+  }
 
   if (isError) {
     return (
@@ -25,69 +37,92 @@ export default function DesignsTab({ projectId }: { projectId: string }) {
     );
   }
 
-  if (!data?.configured || data.linked === false || !data.plan) {
-    return <SectionCard title="التصاميم والمخططات"><NotConfigured system="Magicplan" /></SectionCard>;
+  if (!data?.configured || data.linked === false) {
+    return (
+      <SectionCard title="التصاميم والمخططات">
+        <NotConfigured system="Magicplan" />
+      </SectionCard>
+    );
   }
 
-  const plan = data.plan;
+  const project = data.data;
+  if (!project) {
+    return (
+      <SectionCard title="التصاميم والمخططات">
+        <EmptyState
+          icon={DraftingCompass}
+          title="لم ترجع بيانات مشروع من Magicplan"
+          description="راجع ربط Magicplan Project ID لهذا المشروع."
+        />
+      </SectionCard>
+    );
+  }
+
+  const planId = project.plan_id ?? data.storedPlanId ?? null;
 
   return (
     <div className="space-y-6">
-      <SectionCard title="بيانات المخطط" description="مصدر البيانات: Magicplan">
-        <div className="grid gap-x-8 sm:grid-cols-2">
-          <InfoRow label="اسم المخطط" value={plan.name} />
-          <InfoRow label="المساحة الكلية" value={plan.area ? `${plan.area} م²` : "—"} />
-          <InfoRow label="عدد الطوابق" value={Array.isArray(plan.floors) ? plan.floors.length : 0} />
-          <InfoRow label="آخر تعديل" value={formatDate(plan.updatedAt)} />
+      <SectionCard
+        title="مشروع Magicplan"
+        description="البيانات معروضة مباشرة من مشروع Magicplan المرتبط"
+      >
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+          <div className="grid gap-x-8 sm:grid-cols-2">
+            <InfoRow label="اسم المشروع" value={project.name || "—"} />
+            <InfoRow label="Magicplan Project ID" value={project.id} />
+            <InfoRow label="Plan ID" value={planId || "—"} />
+            <InfoRow label="External Reference" value={project.external_reference_id || "—"} />
+            <InfoRow label="آخر تعديل" value={formatDate(project.user_modified)} />
+            <InfoRow
+              label="الحالة"
+              value={project.archived_at ? `مؤرشف — ${formatDate(project.archived_at)}` : "نشط"}
+            />
+          </div>
+
+          <div className="overflow-hidden rounded-xl border border-border bg-muted/30">
+            {project.thumbnail_url ? (
+              <img
+                src={project.thumbnail_url}
+                alt={project.name || "Magicplan"}
+                className="h-full min-h-48 w-full object-cover"
+                loading="lazy"
+              />
+            ) : (
+              <div className="grid min-h-48 place-items-center text-muted-foreground">
+                <ImageIcon className="h-10 w-10" />
+              </div>
+            )}
+          </div>
         </div>
-        {plan.viewerUrl && (
-          <div className="mt-4">
+
+        {project.description && (
+          <p className="mt-5 whitespace-pre-wrap text-sm leading-7 text-muted-foreground">
+            {project.description}
+          </p>
+        )}
+
+        {project.cloud_url && (
+          <div className="mt-5">
             <Button asChild variant="outline" className="gap-2">
-              <a href={plan.viewerUrl} target="_blank" rel="noopener noreferrer">
+              <a href={project.cloud_url} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="h-4 w-4" />
-                فتح المخطط في نافذة جديدة
+                فتح المشروع في Magicplan
               </a>
             </Button>
           </div>
         )}
       </SectionCard>
 
-      {plan.viewerUrl ? (
-        <SectionCard title="عارض النموذج ثلاثي الأبعاد / المخطط">
-          <div className="aspect-video overflow-hidden rounded-xl border border-border bg-muted">
-            <iframe
-              src={plan.viewerUrl}
-              title={`عارض مخطط ${plan.name}`}
-              className="h-full w-full"
-              loading="lazy"
-              allow="fullscreen; xr-spatial-tracking"
-            />
-          </div>
-        </SectionCard>
-      ) : (
-        <SectionCard title="عارض النموذج ثلاثي الأبعاد / المخطط">
-          <EmptyState icon={Boxes} title="لا يوجد عارض تفاعلي متاح لهذا المخطط" />
-        </SectionCard>
-      )}
-
-      {Array.isArray(plan.floors) && plan.floors.length > 0 && (
-        <SectionCard title="الطوابق والمساحات">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {plan.floors.map((floor, i) => {
-              const f = floor as { name?: string; area?: number | string };
-              return (
-                <div key={i} className="flex items-center gap-3 rounded-xl border border-border/60 bg-secondary/30 p-4">
-                  <Ruler className="h-5 w-5 text-accent" />
-                  <div>
-                    <p className="font-display font-bold text-foreground">{f.name || `الطابق ${i + 1}`}</p>
-                    <p className="text-sm text-muted-foreground">{f.area ? `${f.area} م²` : "—"}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </SectionCard>
-      )}
+      <SectionCard
+        title="المخطط والملفات الهندسية"
+        description="سيتم تفعيل التفاصيل والملفات هنا بعد اجتياز اختبار المسارات المباشر من خادم الإنتاج."
+      >
+        <EmptyState
+          icon={DraftingCompass}
+          title="ربط المشروع مؤكد — اختبار المسارات التفصيلية متبقٍ"
+          description="لن تعتمد البوابة على شكل Plan أو Files مفترض قبل اختبار Magicplan مباشرة من الخادم ومطابقة الاستجابة الفعلية."
+        />
+      </SectionCard>
     </div>
   );
 }

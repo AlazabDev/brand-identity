@@ -38,32 +38,33 @@ ok "Node.js ${NODE_VERSION} مطابق لسياسة الإنتاج"
 
 # ─── 1b. Remaining prerequisites ───
 info "فحص بقية المتطلبات..."
-command -v pnpm  >/dev/null 2>&1 || { info "تثبيت pnpm..."; npm i -g pnpm; }
+command -v pnpm >/dev/null 2>&1 || { info "تثبيت pnpm..."; npm i -g pnpm@10; }
 command -v nginx >/dev/null 2>&1 || err "Nginx غير مثبت"
+[ -f pnpm-lock.yaml ] || err "pnpm-lock.yaml غير موجود — النشر الإنتاجي يرفض تثبيت حزم غير مقفلة"
 ok "المتطلبات جاهزة — Node ${NODE_VERSION} | pnpm $(pnpm -v)"
 
 # ─── 1c. Environment ───
-[ -f .env ] || err "ملف .env غير موجود — مطلوب VITE_SUPABASE_URL و VITE_SUPABASE_PUBLISHABLE_KEY"
-grep -q "VITE_SUPABASE_URL" .env || err ".env ناقص VITE_SUPABASE_URL"
-grep -q "VITE_SUPABASE_PUBLISHABLE_KEY" .env || err ".env ناقص VITE_SUPABASE_PUBLISHABLE_KEY"
-ok "متغيرات البيئة جاهزة"
+[ -f .env ] || err "ملف .env غير موجود — انسخ .env.example وأدخل قيم الإنتاج على الخادم"
+grep -Eq '^VITE_SUPABASE_URL=.+$' .env || err ".env ناقص قيمة VITE_SUPABASE_URL"
+grep -Eq '^VITE_SUPABASE_PUBLISHABLE_KEY=.+$' .env || err ".env ناقص قيمة VITE_SUPABASE_PUBLISHABLE_KEY"
+ok "متغيرات البيئة الأساسية جاهزة"
 
-# ─── 2. Install ───
-info "تثبيت الحزم..."
-pnpm install --frozen-lockfile 2>/dev/null || pnpm install
-ok "تم تثبيت الحزم"
+# ─── 2. Deterministic install ───
+info "تثبيت الحزم من Lockfile..."
+pnpm install --frozen-lockfile
+ok "تم تثبيت الحزم طبقًا لـ pnpm-lock.yaml"
 
-# ─── 3. Build ───
-info "بناء التطبيق للإنتاج..."
-pnpm build
+# ─── 3. Production validation + build ───
+info "تشغيل TypeScript + ESLint + Tests + Production Build..."
+pnpm check
 [ -d "$BUILD_DIR" ] || err "فشل البناء — مجلد dist غير موجود"
-ok "تم البناء بنجاح"
+ok "اجتازت النسخة بوابات الإنتاج وتم البناء بنجاح"
 
 # ─── 4. Deploy files ───
 info "نشر الملفات إلى ${DEPLOY_DIR}..."
 sudo mkdir -p "$DEPLOY_DIR"
 sudo rm -rf "${DEPLOY_DIR:?}/"*
-sudo cp -r ${BUILD_DIR}/* "$DEPLOY_DIR/"
+sudo cp -r "${BUILD_DIR}/." "$DEPLOY_DIR/"
 sudo chown -R www-data:www-data "$DEPLOY_DIR"
 sudo chmod -R 755 "$DEPLOY_DIR"
 ok "تم نشر الملفات"
@@ -99,7 +100,6 @@ server {
     # Security headers
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     add_header Permissions-Policy "camera=(), microphone=(self), geolocation=()" always;
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
@@ -112,9 +112,6 @@ server {
     gzip_comp_level 6;
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript image/svg+xml application/wasm;
 
-    # Brotli (if module available)
-    # brotli on; brotli_comp_level 6; brotli_types text/plain text/css application/json application/javascript image/svg+xml;
-
     # Static assets — immutable cache
     location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|webp|avif|wasm)$ {
         expires 1y;
@@ -123,7 +120,6 @@ server {
         try_files $uri =404;
     }
 
-    # sitemap & robots
     location = /sitemap.xml { add_header Cache-Control "public, max-age=3600"; }
     location = /robots.txt  { add_header Cache-Control "public, max-age=3600"; }
 
@@ -144,17 +140,18 @@ server {
         proxy_read_timeout 60s;
     }
 
-    # Auth & API & Webhook routes (proxy to Supabase Edge Functions)
     location /auth/v1/callback {
         proxy_pass https://tcjbcbmvkajwnsuzhefh.supabase.co/functions/v1/auth-callback;
         proxy_set_header Host tcjbcbmvkajwnsuzhefh.supabase.co;
         proxy_ssl_server_name on;
     }
+
     location /api/v1/ {
         proxy_pass https://tcjbcbmvkajwnsuzhefh.supabase.co/functions/v1/api-handler/;
         proxy_set_header Host tcjbcbmvkajwnsuzhefh.supabase.co;
         proxy_ssl_server_name on;
     }
+
     location /api/webhook {
         proxy_pass https://tcjbcbmvkajwnsuzhefh.supabase.co/functions/v1/whatsapp-webhook;
         proxy_set_header Host tcjbcbmvkajwnsuzhefh.supabase.co;
@@ -192,5 +189,5 @@ echo "  📁  ${DEPLOY_DIR}"
 echo "  ⏱   Keep-Alive: systemctl list-timers supabase-keepalive.timer"
 echo "  📝  السجل: /var/log/supabase-keepalive.log"
 echo ""
-echo "  للتحديث: git pull && bash deploy.sh"
+echo "  للتحديث: git pull --ff-only && bash deploy.sh"
 echo ""

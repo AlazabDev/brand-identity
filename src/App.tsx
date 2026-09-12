@@ -9,11 +9,12 @@ import LoadingScreen from "@/components/LoadingScreen";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { CookieConsent } from "@/components/CookieConsent";
 
-// Lazy load pages for better performance
+// Public pages
 const Index = lazy(() => import("./pages/Index"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const ServicesPage = lazy(() => import("./pages/ServicesPage"));
 const ProjectsPage = lazy(() => import("./pages/ProjectsPage"));
+const ProjectDetailPage = lazy(() => import("./pages/ProjectDetailPage"));
 const BlogPage = lazy(() => import("./pages/BlogPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
 const QuotePage = lazy(() => import("./pages/QuotePage"));
@@ -23,40 +24,44 @@ const TermsPage = lazy(() => import("./pages/TermsPage"));
 const CookiePolicyPage = lazy(() => import("./pages/CookiePolicyPage"));
 const DataDeletionPage = lazy(() => import("./pages/DataDeletionPage"));
 const SitemapPage = lazy(() => import("./pages/SitemapPage"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const AdminLoginPage = lazy(() => import("./pages/AdminLoginPage"));
-const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
-const AdminPortalPage = lazy(() => import("./pages/AdminPortalPage"));
+const TeamPage = lazy(() => import("./pages/TeamPage"));
+const PartnersPage = lazy(() => import("./pages/PartnersPage"));
+const CareersPage = lazy(() => import("./pages/CareersPage"));
+const WorksPage = lazy(() => import("./pages/works"));
+const ArchitectureProjectsPage = lazy(() => import("./pages/ArchitectureProjectsPage"));
+const ArchitectureProjectDetailPage = lazy(() => import("./pages/ArchitectureProjectDetailPage"));
+const ShowcaseIndexPage = lazy(() => import("./pages/ShowcaseIndexPage"));
+const ShowcaseDetailPage = lazy(() => import("./pages/ShowcaseDetailPage"));
+const MaintenanceTrackingPage = lazy(() => import("./pages/MaintenanceTrackingPage"));
+
+// Client portal — single production implementation
 const PortalLoginPage = lazy(() => import("./pages/PortalLoginPage"));
 const PortalResetPasswordPage = lazy(() => import("./pages/PortalResetPasswordPage"));
 const PortalProjectsPage = lazy(() => import("./pages/PortalProjectsPage"));
 const PortalProjectPage = lazy(() => import("./pages/PortalProjectPage"));
-const MaintenanceTrackingPage = lazy(() => import("./pages/MaintenanceTrackingPage"));
-const TeamPage = lazy(() => import("./pages/TeamPage"));
-const ProjectDetailPage = lazy(() => import("./pages/ProjectDetailPage"));
-const PartnersPage = lazy(() => import("./pages/PartnersPage"));
-const CareersPage = lazy(() => import("./pages/CareersPage"));
+
+// Administration
+const AdminLoginPage = lazy(() => import("./pages/AdminLoginPage"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const AdminPortalPage = lazy(() => import("./pages/AdminPortalPage"));
 const WebhookDashboardPage = lazy(() => import("./pages/WebhookDashboardPage"));
-const WorksPage = lazy(() => import("./pages/works"));
-const ArchitectureProjectsPage = lazy(() => import("./pages/ArchitectureProjectsPage"));
-const ArchitectureProjectDetailPage = lazy(() => import("./pages/ArchitectureProjectDetailPage"));
 const AdminArchitecturePage = lazy(() => import("./pages/AdminArchitecturePage"));
-const ShowcaseIndexPage = lazy(() => import("./pages/ShowcaseIndexPage"));
-const ShowcaseDetailPage = lazy(() => import("./pages/ShowcaseDetailPage"));
-const PortalLoginPage = lazy(() => import("./pages/portal/PortalLoginPage"));
-const PortalDashboardPage = lazy(() => import("./pages/portal/PortalDashboardPage"));
-const PortalProjectPage = lazy(() => import("./pages/portal/PortalProjectPage"));
+
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
 
 function ScrollToTop() {
   const { pathname } = useLocation();
-  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
   return null;
 }
 
 function AnimatedRoutes() {
   const location = useLocation();
+
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
@@ -64,6 +69,7 @@ function AnimatedRoutes() {
         <Route path="/about" element={<AboutPage />} />
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/projects" element={<ProjectsPage />} />
+        <Route path="/projects/:id" element={<ProjectDetailPage />} />
         <Route path="/blog" element={<BlogPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/quote" element={<QuotePage />} />
@@ -76,7 +82,12 @@ function AnimatedRoutes() {
         <Route path="/team" element={<TeamPage />} />
         <Route path="/partners" element={<PartnersPage />} />
         <Route path="/careers" element={<CareersPage />} />
-        <Route path="/projects/:id" element={<ProjectDetailPage />} />
+        <Route path="/maintenance-tracking" element={<MaintenanceTrackingPage />} />
+        <Route path="/works" element={<WorksPage />} />
+        <Route path="/architecture" element={<ArchitectureProjectsPage />} />
+        <Route path="/architecture/:id" element={<ArchitectureProjectDetailPage />} />
+        <Route path="/showcase" element={<ShowcaseIndexPage />} />
+        <Route path="/showcase/:slug" element={<ShowcaseDetailPage />} />
 
         <Route path="/portal/login" element={<PortalLoginPage />} />
         <Route path="/portal/reset-password" element={<PortalResetPasswordPage />} />
@@ -86,17 +97,9 @@ function AnimatedRoutes() {
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/portal" element={<AdminPortalPage />} />
-        <Route path="/maintenance-tracking" element={<MaintenanceTrackingPage />} />
         <Route path="/admin/webhooks" element={<WebhookDashboardPage />} />
         <Route path="/admin/architecture" element={<AdminArchitecturePage />} />
-        <Route path="/works" element={<WorksPage />} />
-        <Route path="/architecture" element={<ArchitectureProjectsPage />} />
-        <Route path="/architecture/:id" element={<ArchitectureProjectDetailPage />} />
-        <Route path="/showcase" element={<ShowcaseIndexPage />} />
-        <Route path="/showcase/:slug" element={<ShowcaseDetailPage />} />
-        <Route path="/portal/login" element={<PortalLoginPage />} />
-        <Route path="/portal" element={<PortalGuard><PortalDashboardPage /></PortalGuard>} />
-        <Route path="/portal/projects/:id" element={<PortalGuard><PortalProjectPage /></PortalGuard>} />
+
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>
@@ -108,17 +111,13 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Sonner />
-        <BrowserRouter
-          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-        >
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <SkipToContent />
           <ScrollToTop />
-          <PortalSessionProvider>
-            <Suspense fallback={<LoadingScreen />}>
-              <AnimatedRoutes />
-              <CookieConsent />
-            </Suspense>
-          </PortalSessionProvider>
+          <Suspense fallback={<LoadingScreen />}>
+            <AnimatedRoutes />
+            <CookieConsent />
+          </Suspense>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

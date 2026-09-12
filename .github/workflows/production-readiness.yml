@@ -3,13 +3,14 @@ name: Production Readiness
 on:
   push:
     branches:
+      - main
       - "fix/production-*"
   pull_request:
     branches:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate:
@@ -36,7 +37,25 @@ jobs:
           node-version: 24
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        shell: bash
+        run: |
+          if [ -f pnpm-lock.yaml ]; then
+            pnpm install --frozen-lockfile
+          else
+            pnpm install --no-frozen-lockfile
+          fi
+
+      - name: Persist generated pnpm lockfile
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          git add pnpm-lock.yaml
+          if ! git diff --cached --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "chore: lock pnpm dependencies [skip ci]"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
 
       - name: Typecheck
         run: pnpm typecheck
@@ -50,7 +69,7 @@ jobs:
       - name: Production build
         run: pnpm build
 
-      - name: Upload generated pnpm lockfile
+      - name: Upload pnpm lockfile
         if: always()
         uses: actions/upload-artifact@v4
         with:

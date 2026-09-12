@@ -77,10 +77,8 @@ function AnimatedRoutes() {
         <Route path="/careers" element={<CareersPage />} />
         <Route path="/projects/:id" element={<ProjectDetailPage />} />
 
-        <Route path="/portal/login" element={<PortalLoginPage />} />
         <Route path="/portal/reset-password" element={<PortalResetPasswordPage />} />
-        <Route path="/portal" element={<PortalProjectsPage />} />
-        <Route path="/portal/projects/:id" element={<PortalProjectPage />} />
+
 
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin" element={<AdminDashboard />} />

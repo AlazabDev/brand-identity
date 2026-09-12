@@ -8,7 +8,9 @@ test("public home renders without a fatal page error", async ({ page }) => {
 
 test("client portal login renders", async ({ page }) => {
   await page.goto("/portal/login");
-  await expect(page.getByRole("heading", { name: /بوابة العملاء/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "تسجيل دخول العميل" })).toBeVisible();
+  await expect(page.getByLabel("البريد الإلكتروني")).toBeVisible();
+  await expect(page.getByLabel("كلمة المرور")).toBeVisible();
 });
 
 test("unknown route is handled by the SPA", async ({ page }) => {

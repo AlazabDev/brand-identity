@@ -8,6 +8,8 @@ import SkipToContent from "@/components/SkipToContent";
 import LoadingScreen from "@/components/LoadingScreen";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { CookieConsent } from "@/components/CookieConsent";
+import PortalGuard from "@/components/portal/PortalGuard";
+import { PortalSessionProvider } from "@/hooks/usePortalSession";
 
 // Lazy load pages for better performance
 const Index = lazy(() => import("./pages/Index"));

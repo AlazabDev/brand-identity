@@ -10,11 +10,14 @@
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "dep": "bash deploy.sh",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build",
+    "dep": "bash deploy.sh"
   },
   "dependencies": {
     "@capacitor/android": "^8.2.0",

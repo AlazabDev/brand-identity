@@ -274,12 +274,13 @@ export type Database = {
           client_name: string | null
           completion_date: string | null
           created_at: string
-          daftra_client_id: string | null
+          daftra_work_order_id: number | null
           description: string | null
           featured: boolean | null
           id: string
           images: string[] | null
           magicplan_plan_id: string | null
+          magicplan_project_id: string | null
           mall: string | null
           minio_prefix: string | null
           progress: number
@@ -293,12 +294,13 @@ export type Database = {
           client_name?: string | null
           completion_date?: string | null
           created_at?: string
-          daftra_client_id?: string | null
+          daftra_work_order_id?: number | null
           description?: string | null
           featured?: boolean | null
           id?: string
           images?: string[] | null
           magicplan_plan_id?: string | null
+          magicplan_project_id?: string | null
           mall?: string | null
           minio_prefix?: string | null
           progress?: number
@@ -312,12 +314,13 @@ export type Database = {
           client_name?: string | null
           completion_date?: string | null
           created_at?: string
-          daftra_client_id?: string | null
+          daftra_work_order_id?: number | null
           description?: string | null
           featured?: boolean | null
           id?: string
           images?: string[] | null
           magicplan_plan_id?: string | null
+          magicplan_project_id?: string | null
           mall?: string | null
           minio_prefix?: string | null
           progress?: number

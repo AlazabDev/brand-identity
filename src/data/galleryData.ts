@@ -1,4 +1,12 @@
 // Gallery data - All company project images organized by source
+import {
+  abuAufBranchImages,
+  alRehabImages,
+  arkanImages,
+  constructionImages,
+  generalProjectImages,
+} from "@/data/localProjectImages";
+
 const ORACLE_BASE = "https://objectstorage.me-jeddah-1.oraclecloud.com/n/axwmiwn72of7/b/alazab-media/o/retail-interiors/retail-interiors-";
 const CLOUD_BASE = "http://res.cloudinary.com/dn4ne1ep1/image/upload/";
 
@@ -235,6 +243,26 @@ export const galleryCategories: GalleryCategory[] = [
     images: [],
   },
   {
+    id: "abuauf-branches",
+    label: "فروع أبو عوف المنفذة",
+    images: abuAufBranchImages,
+  },
+  {
+    id: "arkan",
+    label: "أركان بلازا",
+    images: arkanImages,
+  },
+  {
+    id: "alrehab",
+    label: "الرحاب",
+    images: alRehabImages,
+  },
+  {
+    id: "construction",
+    label: "مراحل التنفيذ",
+    images: constructionImages,
+  },
+  {
     id: "retail-interiors",
     label: "تجهيزات داخلية",
     images: generateOracleUrls(),
@@ -252,10 +280,10 @@ export const galleryCategories: GalleryCategory[] = [
 ];
 
 // "All" category aggregates everything
-galleryCategories[0].images = [
-  ...galleryCategories[1].images,
-  ...galleryCategories[2].images,
-  ...galleryCategories[3].images,
-];
+galleryCategories[0].images = galleryCategories
+  .slice(1)
+  .flatMap((category) => category.images)
+  .concat(generalProjectImages);
 
 export const totalImageCount = galleryCategories[0].images.length;
+

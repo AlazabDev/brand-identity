@@ -69,8 +69,15 @@ const Header = () => {
           })}
         </nav>
 
-        {/* CTA Button */}
+        {/* CTA Buttons */}
         <div className="hidden lg:flex items-center gap-3">
+          <Link
+            to="/portal/login"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-primary/30 text-primary font-display font-bold text-sm hover:bg-primary hover:text-primary-foreground active:scale-95 transition-all"
+          >
+            <LogIn className="w-4 h-4" />
+            دخول العملاء
+          </Link>
           <Link
             to="/quote"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent text-accent-foreground font-display font-bold text-sm hover:-translate-y-0.5 active:scale-95 transition-all"
@@ -80,15 +87,25 @@ const Header = () => {
           </Link>
         </div>
 
-        {/* Mobile Toggle */}
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="lg:hidden p-2 text-foreground"
-          aria-label={mobileOpen ? "إغلاق القائمة" : "فتح القائمة"}
-          aria-expanded={mobileOpen}
-        >
-          {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+        {/* Mobile actions: login button next to the menu toggle */}
+        <div className="flex items-center gap-1 lg:hidden">
+          <Link
+            to="/portal/login"
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-primary/30 px-3 py-2 font-display text-xs font-bold text-primary active:scale-95 transition-all"
+          >
+            <LogIn className="w-4 h-4" />
+            دخول العملاء
+          </Link>
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="p-2 min-h-11 min-w-11 flex items-center justify-center text-foreground"
+            aria-label={mobileOpen ? "إغلاق القائمة" : "فتح القائمة"}
+            aria-expanded={mobileOpen}
+          >
+            {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
+
       </div>
 
       {/* Mobile Menu */}

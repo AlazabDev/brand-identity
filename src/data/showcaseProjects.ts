@@ -18,9 +18,13 @@ export interface ShowcaseProject {
   gallery: string[];
 }
 
-const retail = galleryCategories[1].images;
-const shops = galleryCategories[2].images;
-const abuauf = galleryCategories[3].images;
+const byId = (id: string): string[] =>
+  galleryCategories.find((category) => category.id === id)?.images ?? [];
+
+const retail = byId("retail-interiors");
+const shops = byId("shops");
+const abuauf = [...byId("abuauf-branches"), ...byId("abuauf")];
+
 
 const pick = (src: string[], indexes: number[]): string[] =>
   indexes.map((i) => src[i % src.length]).filter(Boolean);

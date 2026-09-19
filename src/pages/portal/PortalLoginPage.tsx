@@ -94,7 +94,15 @@ export default function PortalLoginPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">كلمة المرور</Label>
+                <div className="flex items-center justify-between gap-2">
+                  <Label htmlFor="password">كلمة المرور</Label>
+                  <Link
+                    to="/portal/reset-password"
+                    className="text-sm font-medium text-primary hover:underline"
+                  >
+                    نسيت كلمة المرور؟
+                  </Link>
+                </div>
                 <div className="relative">
                   <Lock className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -104,6 +112,7 @@ export default function PortalLoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pr-10 text-right"
+                    autoComplete="current-password"
                     required
                   />
                 </div>
